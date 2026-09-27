@@ -1,0 +1,18 @@
+# Node
+node_modules/
+.next/
+next-env.d.ts
+npm-debug.log*
+
+# Next.js env (local-only, not secret here, but standard practice)
+.env.local
+.env*.local
+
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# OS
+Thumbs.db
+.DS_Store
