@@ -1,5 +1,6 @@
 import csv
 import io
+import os
 from functools import lru_cache
 
 from fastapi import Depends, FastAPI, Query, Request
@@ -12,9 +13,14 @@ from app.records import query_all_matching, query_records
 
 app = FastAPI(title="FMCG Retail API")
 
+# Comma-separated extra origins (e.g. the Amplify domain) via env var, on
+# top of localhost:3000 for local dev -- avoids a code change + redeploy
+# every time the frontend's domain changes (e.g. a future custom domain).
+_extra_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", *_extra_origins],
     allow_methods=["GET"],
     allow_headers=["*"],
 )
