@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FMCG Retail Dashboard (frontend)
 
-## Getting Started
+Next.js client-side dashboard for the FMCG retail dataset. Fetches all data via
+Axios from the FastAPI backend in [`../backend`](../backend) — see the repo
+root for the full architecture (SQLite → FastAPI → Next.js).
 
-First, run the development server:
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requires `NEXT_PUBLIC_API_URL` pointing at a running backend (defaults to
+`http://localhost:8000` if unset — see `src/lib/api.ts`). For local dev, copy:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+into `.env.local` (gitignored, not committed).
 
-## Learn More
+## Deploying on AWS Amplify
 
-To learn more about Next.js, take a look at the following resources:
+This app lives in a subdirectory of the repo (`fmcg-dashboard/`), not the
+repo root, so Amplify needs the monorepo build spec at
+[`../amplify.yml`](../amplify.yml) — Amplify Hosting picks this up
+automatically when you connect the repo.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Steps in the Amplify Console:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Host web app → GitHub → select this repo and branch.** Amplify should
+   detect `amplify.yml` at the repo root and the `fmcg-dashboard` app root
+   from it.
+2. **App settings → Environment variables** — add:
+   - `NEXT_PUBLIC_API_URL` = the public URL of your deployed FastAPI backend
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   Amplify Hosting only serves this Next.js frontend — it does not run the
+   Python backend in `../backend`. That needs to be deployed separately
+   (e.g. AWS App Runner, ECS, EC2) and be publicly reachable, with CORS in
+   `backend/app/main.py` updated to allow your Amplify domain, before the
+   deployed dashboard will show live data.
+3. Deploy. Subsequent pushes to the connected branch redeploy automatically.
