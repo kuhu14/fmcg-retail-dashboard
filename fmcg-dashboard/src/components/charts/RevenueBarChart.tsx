@@ -17,7 +17,9 @@ import { ChartTooltip } from "./ChartTooltip";
 interface Row {
   name: string;
   revenue: number;
-  marginPct: number;
+  /** Omitted when there's no cost basis to compute a margin from (e.g. the
+   * International dashboard, which only has unit price × quantity). */
+  marginPct?: number;
   orders: number;
 }
 
@@ -26,11 +28,13 @@ export function RevenueBarChart({
   data,
   onBarClick,
   activeName,
+  formatValue = (v) => formatINR(v, { compact: true }),
 }: {
   dimension: string;
   data: Row[];
   onBarClick?: (name: string) => void;
   activeName?: string | null;
+  formatValue?: (v: number) => string;
 }) {
   const colorScale = entityColorScale(
     dimension,
@@ -56,7 +60,7 @@ export function RevenueBarChart({
           tick={{ fill: "var(--chart-muted)", fontSize: 11 }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(v) => formatINR(v, { compact: true })}
+          tickFormatter={formatValue}
           width={56}
         />
         <Tooltip
@@ -68,8 +72,8 @@ export function RevenueBarChart({
               <ChartTooltip
                 title={d.name}
                 rows={[
-                  ["Revenue", formatINR(d.revenue, { compact: true })],
-                  ["Margin", formatPct(d.marginPct, 2)],
+                  ["Revenue", formatValue(d.revenue)],
+                  ...(d.marginPct !== undefined ? [["Margin", formatPct(d.marginPct, 2)] as [string, string]] : []),
                   ["Orders", d.orders.toLocaleString("en-IN")],
                 ]}
               />

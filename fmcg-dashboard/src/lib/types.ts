@@ -138,3 +138,73 @@ export interface DecodedRecord {
   gender: string;
   loyalty: number;
 }
+
+// --- International/Exports department (global multi-country transactions,
+// 2024-2026) -- a separate schema from the India FMCG data above, with no
+// city/store/channel/brand/cost/stock concepts, just country-level price ×
+// quantity transactions.
+
+export interface IntlDimensionAgg {
+  revenue: number;
+  units: number;
+  orders: number;
+}
+
+export interface IntlInsight {
+  id: string;
+  severity: "critical" | "warning" | "opportunity" | "info";
+  title: string;
+  description: string;
+  actionLabel: string;
+  filter: IntlFilter;
+}
+
+export interface IntlSummary {
+  meta: {
+    recordCount: number;
+    columns: string[];
+  };
+  totals: {
+    revenue: number;
+    units: number;
+    orders: number;
+    avgOrderValue: number;
+  };
+  byCountry: (IntlDimensionAgg & { country: string })[];
+  byCategory: (IntlDimensionAgg & { category: string })[];
+  byPaymentMethod: (IntlDimensionAgg & { paymentMethod: string })[];
+  byGeneration: (IntlDimensionAgg & { generation: string })[];
+  monthlyTrend: (IntlDimensionAgg & { month: string })[];
+  yearlyTrend: (IntlDimensionAgg & { year: string })[];
+  insights: IntlInsight[];
+}
+
+export interface IntlFilter {
+  country?: string;
+  category?: string;
+  paymentMethod?: string;
+  generation?: string;
+  month?: string;
+  year?: number;
+  search?: string;
+}
+
+export interface IntlRecord {
+  transactionId: string;
+  date: string;
+  country: string;
+  category: string;
+  paymentMethod: string;
+  age: number;
+  generation: string;
+  unitPrice: number;
+  quantity: number;
+  revenue: number;
+}
+
+export interface IntlRecordsResponse {
+  rows: IntlRecord[];
+  total: number;
+  page: number;
+  pageSize: number;
+}

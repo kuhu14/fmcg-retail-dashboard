@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from app.aggregates import build_summary
 from app.db import db_version, get_db
 from app.records import query_all_matching, query_records
+from app import international as intl
 
 app = FastAPI(title="FMCG Retail API")
 
@@ -100,6 +101,26 @@ def filters_cache_key(filters: dict) -> tuple:
     return tuple(sorted((k, v) for k, v in filters.items() if v is not None))
 
 
+def intl_filters(
+    country: str | None = None,
+    category: str | None = None,
+    paymentMethod: str | None = None,
+    generation: str | None = None,
+    month: str | None = None,
+    year: int | None = Query(default=None, ge=2000, le=2100),
+    search: str | None = None,
+) -> dict:
+    return {
+        "country": country,
+        "category": category,
+        "paymentMethod": paymentMethod,
+        "generation": generation,
+        "month": month,
+        "year": year,
+        "search": search,
+    }
+
+
 # In-process caches, keyed on db_version() so a re-run of
 # database/load-data.mjs (which rewrites fmcg.db) invalidates them
 # automatically instead of serving stale data forever.
@@ -116,6 +137,19 @@ def _cached_records(
 ) -> tuple[list[dict], int]:
     filters = dict(filters_key)
     return query_records(get_db(), filters, sort_by, sort_dir, page, page_size)
+
+
+@lru_cache(maxsize=256)
+def _cached_intl_summary(version: float, filters_key: tuple) -> dict:
+    return intl.build_summary(get_db(), dict(filters_key))
+
+
+@lru_cache(maxsize=1024)
+def _cached_intl_records(
+    version: float, filters_key: tuple, sort_by: str, sort_dir: str, page: int, page_size: int
+) -> tuple[list[dict], int]:
+    filters = dict(filters_key)
+    return intl.query_records(get_db(), filters, sort_by, sort_dir, page, page_size)
 
 
 @app.get("/health")
@@ -161,5 +195,45 @@ def export_records(filters: dict = Depends(record_filters)):
         media_type="text/csv",
         headers={
             "Content-Disposition": f'attachment; filename="fmcg-export-{len(rows)}-rows.csv"'
+        },
+    )
+
+
+@app.get("/api/intl/summary")
+def get_intl_summary(filters: dict = Depends(intl_filters)):
+    summary_filters = {k: v for k, v in filters.items() if k != "search"}
+    return _cached_intl_summary(db_version(), filters_cache_key(summary_filters))
+
+
+@app.get("/api/intl/records")
+def get_intl_records(
+    filters: dict = Depends(intl_filters),
+    sortBy: str = "date",
+    sortDir: str = "desc",
+    page: int = Query(default=0, ge=0),
+    pageSize: int = Query(default=20, ge=1, le=500),
+):
+    rows, total = _cached_intl_records(
+        db_version(), filters_cache_key(filters), sortBy, sortDir, page, pageSize
+    )
+    return {"rows": rows, "total": total, "page": page, "pageSize": pageSize}
+
+
+@app.get("/api/intl/records/export")
+def export_intl_records(filters: dict = Depends(intl_filters)):
+    rows = intl.query_all_matching(get_db(), filters)
+
+    buffer = io.StringIO()
+    if rows:
+        writer = csv.DictWriter(buffer, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+    buffer.seek(0)
+
+    return StreamingResponse(
+        iter([buffer.getvalue()]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="intl-export-{len(rows)}-rows.csv"'
         },
     )

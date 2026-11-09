@@ -16,11 +16,13 @@ export function MixDonutChart({
   data,
   onSliceClick,
   activeName,
+  formatValue = (v) => formatINR(v, { compact: true }),
 }: {
   dimension: string;
   data: Row[];
   onSliceClick?: (name: string) => void;
   activeName?: string | null;
+  formatValue?: (v: number) => string;
 }) {
   const colorScale = entityColorScale(
     dimension,
@@ -40,7 +42,7 @@ export function MixDonutChart({
                 <ChartTooltip
                   title={d.name}
                   rows={[
-                    ["Revenue", formatINR(d.revenue, { compact: true })],
+                    ["Revenue", formatValue(d.revenue)],
                     ["Share", formatPct((d.revenue / total) * 100)],
                     ["Orders", d.orders.toLocaleString("en-IN")],
                   ]}
