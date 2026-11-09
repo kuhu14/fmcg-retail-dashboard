@@ -13,8 +13,13 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* San Francisco on Apple devices via the -apple-system/BlinkMacSystemFont
+     system-font keywords (the licensed way to use it on the web -- SF Pro's
+     font files themselves aren't redistributable outside Apple platforms),
+     falling back to each OS's own native UI font elsewhere. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code", "Roboto Mono", monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,7 +47,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
 }
 
 ::selection {
