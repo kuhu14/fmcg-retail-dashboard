@@ -6,43 +6,17 @@ import { useIntlSummary } from "@/hooks/useIntlApi";
 import { Kpi } from "./KpiCards";
 import { InsightCards } from "./InsightCards";
 import { Card } from "./Card";
+import { FilterGroup, FilterSelect } from "./FilterControls";
 import { IntlDrillDownTable } from "./IntlDrillDownTable";
 import { RevenueBarChart } from "./charts/RevenueBarChart";
 import { MixDonutChart } from "./charts/MixDonutChart";
 import { formatNumber, formatUSD } from "@/lib/format";
+import { monthlyTrendDirection } from "@/lib/trend";
 
 const EMPTY_FILTER: IntlFilter = {};
 
 function sameFilter(a: IntlFilter, b: IntlFilter): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
-}
-
-function FilterSelect({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
-}) {
-  return (
-    <select
-      aria-label={label}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="text-xs rounded-md border border-[var(--card-border)] bg-[var(--background)] px-2 py-1.5 text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[110px]"
-    >
-      <option value="">All {label}</option>
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
-  );
 }
 
 export function InternationalDashboard() {
