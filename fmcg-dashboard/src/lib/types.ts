@@ -36,10 +36,23 @@ export interface Summary {
   monthlyTrend: {
     month: string;
     revenue: number;
+    cost: number;
     margin: number;
     marginPct: number;
     units: number;
     orders: number;
+    avgOrderValue: number;
+    loyaltyPct: number;
+    stockoutRisk: number;
+    stockoutRiskPct: number;
+    criticalStock: number;
+    overstock: number;
+    overstockPct: number;
+    avgLeadTimeDays: number;
+    avgOrderValueLoyal: number;
+    avgOrderValueNonLoyal: number;
+    ageMissing: number;
+    ageMissingPct: number;
   }[];
   ageBuckets: Record<string, number>;
   byLoyalty: {

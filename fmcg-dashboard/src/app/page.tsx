@@ -19,6 +19,7 @@ import { MixDonutChart } from "@/components/charts/MixDonutChart";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { InventoryRiskChart } from "@/components/charts/InventoryRiskChart";
 import { formatINR, formatNumber, formatPct } from "@/lib/format";
+import { monthlyTrendDirection } from "@/lib/trend";
 
 const EMPTY_FILTER: RecordFilter = {};
 

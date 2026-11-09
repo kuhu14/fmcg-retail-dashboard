@@ -111,11 +111,23 @@ def build_summary(conn: sqlite3.Connection, filters: dict | None = None) -> dict
     by_brand = dim_breakdown(conn, "brand", "brand", where, params)
     by_gender = dim_breakdown(conn, "COALESCE(customer_gender, 'N/A')", "gender", where, params)
 
+    # Every metric any KPI tile can show, broken out by month, so the frontend
+    # can color a tile green/red/blue by comparing its latest two months.
     monthly_rows = conn.execute(
         f"""
         SELECT substr(invoice_date, 1, 7) AS month,
-               SUM(revenue) AS revenue, SUM(margin) AS margin,
-               SUM(units) AS units, COUNT(*) AS orders
+               SUM(revenue) AS revenue, SUM(cost) AS cost, SUM(margin) AS margin,
+               SUM(units) AS units, COUNT(*) AS orders,
+               SUM(CASE WHEN loyalty_flag = 1 THEN 1 ELSE 0 END) AS loyalty_count,
+               SUM(CASE WHEN customer_age IS NULL THEN 1 ELSE 0 END) AS age_missing,
+               SUM(CASE WHEN stock_on_hand <= reorder_level THEN 1 ELSE 0 END) AS stockout_risk,
+               SUM(CASE WHEN stock_on_hand < 0.5 * reorder_level THEN 1 ELSE 0 END) AS critical_stock,
+               SUM(CASE WHEN stock_on_hand > 3 * reorder_level THEN 1 ELSE 0 END) AS overstock,
+               AVG(lead_time_days) AS avg_lead_time,
+               SUM(CASE WHEN loyalty_flag = 1 THEN revenue ELSE 0 END) AS loyal_revenue,
+               SUM(CASE WHEN loyalty_flag = 1 THEN 1 ELSE 0 END) AS loyal_orders,
+               SUM(CASE WHEN loyalty_flag = 0 THEN revenue ELSE 0 END) AS non_loyal_revenue,
+               SUM(CASE WHEN loyalty_flag = 0 THEN 1 ELSE 0 END) AS non_loyal_orders
         FROM sales
         {where}
         GROUP BY month
@@ -127,10 +139,23 @@ def build_summary(conn: sqlite3.Connection, filters: dict | None = None) -> dict
         {
             "month": row["month"],
             "revenue": r2(row["revenue"]),
+            "cost": r2(row["cost"]),
             "margin": r2(row["margin"]),
             "marginPct": r2((row["margin"] / row["revenue"]) * 100) if row["revenue"] else 0.0,
             "units": row["units"],
             "orders": row["orders"],
+            "avgOrderValue": r2(row["revenue"] / row["orders"]) if row["orders"] else 0.0,
+            "loyaltyPct": r2((row["loyalty_count"] / row["orders"]) * 100) if row["orders"] else 0.0,
+            "stockoutRisk": row["stockout_risk"] or 0,
+            "stockoutRiskPct": r2((row["stockout_risk"] / row["orders"]) * 100) if row["orders"] else 0.0,
+            "criticalStock": row["critical_stock"] or 0,
+            "overstock": row["overstock"] or 0,
+            "overstockPct": r2((row["overstock"] / row["orders"]) * 100) if row["orders"] else 0.0,
+            "avgLeadTimeDays": r2(row["avg_lead_time"]),
+            "avgOrderValueLoyal": r2(row["loyal_revenue"] / row["loyal_orders"]) if row["loyal_orders"] else 0.0,
+            "avgOrderValueNonLoyal": r2(row["non_loyal_revenue"] / row["non_loyal_orders"]) if row["non_loyal_orders"] else 0.0,
+            "ageMissing": row["age_missing"] or 0,
+            "ageMissingPct": r2((row["age_missing"] / row["orders"]) * 100) if row["orders"] else 0.0,
         }
         for row in monthly_rows
     ]
