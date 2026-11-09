@@ -26,6 +26,15 @@ export const viewport: Viewport = {
   themeColor: "#2a78d6",
 };
 
+const THEME_BOOTSTRAP = `
+try {
+  var m = localStorage.getItem("fmcg-theme-mode");
+  if (m === "light" || m === "dark") {
+    document.documentElement.setAttribute("data-theme", m);
+  }
+} catch (e) {}
+`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -33,6 +42,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+      </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {children}
       </body>
