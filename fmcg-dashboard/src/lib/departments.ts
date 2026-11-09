@@ -55,7 +55,6 @@ export const DEPARTMENTS: Department[] = [
   {
     id: "exports",
     label: "International / Exports",
-    description: "Cross-border sales data",
-    comingSoon: true,
+    description: "Global transactions by country, 2024–2026",
   },
 ];

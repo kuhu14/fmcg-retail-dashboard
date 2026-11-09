@@ -11,6 +11,7 @@ import { DataSourceInfo } from "@/components/DataSourceInfo";
 import { DrillDownTable } from "@/components/DrillDownTable";
 import { Card } from "@/components/Card";
 import { ComingSoon } from "@/components/ComingSoon";
+import { InternationalDashboard } from "@/components/InternationalDashboard";
 import { FilterBar } from "@/components/FilterBar";
 import { FilterPanel } from "@/components/FilterPanel";
 import { Sidebar } from "@/components/Sidebar";
@@ -166,7 +167,9 @@ export default function Home() {
         </header>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
-          {dept.comingSoon ? (
+          {dept.id === "exports" ? (
+            <InternationalDashboard />
+          ) : dept.comingSoon ? (
             <ComingSoon label={dept.label} description={dept.description} />
           ) : (
             <>

@@ -3,14 +3,23 @@
 import type { Insight, RecordFilter } from "@/lib/types";
 import { SEVERITY_STYLE } from "@/lib/palette";
 
-export function InsightCards({
+interface InsightLike<F> {
+  id: string;
+  severity: "critical" | "warning" | "opportunity" | "info";
+  title: string;
+  description: string;
+  actionLabel: string;
+  filter: F;
+}
+
+export function InsightCards<F>({
   insights,
   activeInsightId,
   onApply,
 }: {
-  insights: Insight[];
+  insights: InsightLike<F>[];
   activeInsightId: string | null;
-  onApply: (insight: Insight) => void;
+  onApply: (insight: InsightLike<F>) => void;
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
