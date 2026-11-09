@@ -5,8 +5,7 @@ import { useThemeMode, type ThemeMode } from "@/hooks/useThemeMode";
 const OPTIONS: { id: ThemeMode; label: string; title: string }[] = [
   { id: "light", label: "☀", title: "Light" },
   { id: "dark", label: "☾", title: "Dark" },
-  { id: "system", label: "◐", title: "Match device" },
-  { id: "sun", label: "⇅", title: "Sunrise / sunset at your location" },
+  { id: "sun", label: "◐", title: "Auto — light at sunrise, dark at sunset (your location)" },
 ];
 
 export function ThemeToggle() {
