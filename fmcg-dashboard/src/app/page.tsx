@@ -12,9 +12,9 @@ import { DrillDownTable } from "@/components/DrillDownTable";
 import { Card } from "@/components/Card";
 import { ComingSoon } from "@/components/ComingSoon";
 import { FilterBar } from "@/components/FilterBar";
+import { FilterPanel } from "@/components/FilterPanel";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { TimeRangeToggle } from "@/components/TimeRangeToggle";
 import { RevenueBarChart } from "@/components/charts/RevenueBarChart";
 import { MixDonutChart } from "@/components/charts/MixDonutChart";
 import { TrendChart } from "@/components/charts/TrendChart";
@@ -88,6 +88,20 @@ export default function Home() {
     setFilter(EMPTY_FILTER);
   }
 
+  function setFilterField(key: keyof RecordFilter, raw: string) {
+    setFilter((prev) => {
+      const next: RecordFilter = { ...prev };
+      if (!raw) {
+        delete next[key];
+      } else if (key === "loyalty") {
+        next.loyalty = Number(raw) as 0 | 1;
+      } else {
+        (next as Record<string, string>)[key] = raw;
+      }
+      return next;
+    });
+  }
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
@@ -142,10 +156,7 @@ export default function Home() {
                     : dept.description}
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <TimeRangeToggle value={timeRange} onChange={setTimeRange} />
-              <ThemeToggle />
-            </div>
+            <ThemeToggle />
           </div>
         </header>
 
@@ -154,6 +165,13 @@ export default function Home() {
             <ComingSoon label={dept.label} description={dept.description} />
           ) : (
             <>
+              <FilterPanel
+                filter={filter}
+                onFieldChange={setFilterField}
+                data={data}
+                timeRange={timeRange}
+                onTimeRangeChange={setTimeRange}
+              />
               <FilterBar filter={filter} onReset={resetFilter} />
 
               <section>
