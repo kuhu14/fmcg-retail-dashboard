@@ -128,7 +128,13 @@ def build_summary(conn: sqlite3.Connection, filters: dict | None = None) -> dict
         params,
     ).fetchall()
     monthly_trend = [
-        {"month": row["month"], "revenue": r2(row["revenue"]), "units": row["units"], "orders": row["orders"]}
+        {
+            "month": row["month"],
+            "revenue": r2(row["revenue"]),
+            "units": row["units"],
+            "orders": row["orders"],
+            "avgOrderValue": r2(row["revenue"] / row["orders"]) if row["orders"] else 0.0,
+        }
         for row in monthly_rows
     ]
 
@@ -142,7 +148,13 @@ def build_summary(conn: sqlite3.Connection, filters: dict | None = None) -> dict
         params,
     ).fetchall()
     yearly_trend = [
-        {"year": row["year"], "revenue": r2(row["revenue"]), "units": row["units"], "orders": row["orders"]}
+        {
+            "year": row["year"],
+            "revenue": r2(row["revenue"]),
+            "units": row["units"],
+            "orders": row["orders"],
+            "avgOrderValue": r2(row["revenue"] / row["orders"]) if row["orders"] else 0.0,
+        }
         for row in yearly_rows
     ]
 

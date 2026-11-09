@@ -174,8 +174,8 @@ export interface IntlSummary {
   byCategory: (IntlDimensionAgg & { category: string })[];
   byPaymentMethod: (IntlDimensionAgg & { paymentMethod: string })[];
   byGeneration: (IntlDimensionAgg & { generation: string })[];
-  monthlyTrend: (IntlDimensionAgg & { month: string })[];
-  yearlyTrend: (IntlDimensionAgg & { year: string })[];
+  monthlyTrend: (IntlDimensionAgg & { month: string; avgOrderValue: number })[];
+  yearlyTrend: (IntlDimensionAgg & { year: string; avgOrderValue: number })[];
   insights: IntlInsight[];
 }
 
