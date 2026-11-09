@@ -4,7 +4,7 @@ import type { RecordFilter, Summary } from "@/lib/types";
 import { monthLabel } from "@/lib/format";
 import { TimeRangeToggle } from "./TimeRangeToggle";
 import { FilterGroup, FilterSelect } from "./FilterControls";
-import { DATASET_MAX_DATE, DATASET_MIN_DATE, TIME_RANGES, type TimeRangeId } from "@/lib/timeRange";
+import { DATASET_MAX_DATE, DATASET_MIN_DATE, type TimeRangeId } from "@/lib/timeRange";
 
 export function FilterPanel({
   filter,
@@ -73,11 +73,6 @@ export function FilterPanel({
       <div className="flex flex-wrap items-start gap-x-5 gap-y-3 pt-3 border-t border-[var(--card-border)]">
         <FilterGroup label="Time">
           <TimeRangeToggle value={timeRange} onChange={onTimeRangeChange} />
-          {TIME_RANGES.find((r) => r.id === timeRange)?.simulated && (
-            <span className="text-[10px] rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 font-medium">
-              Simulated -- not real sales
-            </span>
-          )}
           {timeRange === "custom" ? (
             <>
               <input
