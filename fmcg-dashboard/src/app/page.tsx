@@ -155,11 +155,13 @@ export default function Home() {
             <div>
               <h1 className="text-lg font-semibold text-[var(--foreground)]">{dept.label}</h1>
               <p className="text-xs text-[var(--chart-muted)]">
-                {dept.id === "overview" && !hasActiveFilter
-                  ? `India · Calendar Year 2024 · ${data.meta.recordCount.toLocaleString("en-IN")} transactions across 8 cities`
-                  : hasActiveFilter
-                    ? `${data.meta.recordCount.toLocaleString("en-IN")} matching transactions`
-                    : dept.description}
+                {dept.id === "exports"
+                  ? dept.description
+                  : dept.id === "overview" && !hasActiveFilter
+                    ? `India · Calendar Year 2024 · ${data.meta.recordCount.toLocaleString("en-IN")} transactions across 8 cities`
+                    : hasActiveFilter
+                      ? `${data.meta.recordCount.toLocaleString("en-IN")} matching transactions`
+                      : dept.description}
               </p>
             </div>
             <ThemeToggle />
