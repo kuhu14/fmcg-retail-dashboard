@@ -108,6 +108,7 @@ def intl_filters(
     generation: str | None = None,
     month: str | None = None,
     year: int | None = Query(default=None, ge=2000, le=2100),
+    quarter: int | None = Query(default=None, ge=1, le=4),
     search: str | None = None,
 ) -> dict:
     return {
@@ -117,6 +118,7 @@ def intl_filters(
         "generation": generation,
         "month": month,
         "year": year,
+        "quarter": quarter,
         "search": search,
     }
 

@@ -56,6 +56,14 @@ def build_where(filters: dict) -> tuple[str, list]:
         clauses.append("substr(transaction_date, 1, 4) = ?")
         params.append(str(filters["year"]))
 
+    if filters.get("quarter"):
+        quarter = filters["quarter"]
+        start_month = (quarter - 1) * 3 + 1
+        end_month = start_month + 2
+        clauses.append("CAST(substr(transaction_date, 6, 2) AS INTEGER) BETWEEN ? AND ?")
+        params.append(start_month)
+        params.append(end_month)
+
     if filters.get("search"):
         clauses.append("transaction_id LIKE ?")
         params.append(f"%{filters['search']}%")

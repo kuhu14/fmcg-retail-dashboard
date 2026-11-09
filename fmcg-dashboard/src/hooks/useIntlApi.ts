@@ -12,6 +12,7 @@ function filterToParams(filter: IntlFilter): Record<string, string | number> {
   if (filter.generation) params.generation = filter.generation;
   if (filter.month) params.month = filter.month;
   if (filter.year !== undefined) params.year = filter.year;
+  if (filter.quarter !== undefined) params.quarter = filter.quarter;
   if (filter.search) params.search = filter.search;
   return params;
 }

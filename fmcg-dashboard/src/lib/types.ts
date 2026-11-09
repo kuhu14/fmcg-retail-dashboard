@@ -186,6 +186,7 @@ export interface IntlFilter {
   generation?: string;
   month?: string;
   year?: number;
+  quarter?: number;
   search?: string;
 }
 

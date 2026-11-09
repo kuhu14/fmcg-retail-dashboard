@@ -55,8 +55,8 @@ export function InternationalDashboard() {
       const next: IntlFilter = { ...prev };
       if (!raw) {
         delete next[key];
-      } else if (key === "year") {
-        next.year = Number(raw);
+      } else if (key === "year" || key === "quarter") {
+        next[key] = Number(raw);
       } else {
         (next as Record<string, string>)[key] = raw;
       }
@@ -134,6 +134,17 @@ export function InternationalDashboard() {
             value={filter.year !== undefined ? String(filter.year) : ""}
             onChange={(v) => setFilterField("year", v)}
             options={data.yearlyTrend.map((y) => ({ value: y.year, label: y.year }))}
+          />
+          <FilterSelect
+            label="Quarters"
+            value={filter.quarter !== undefined ? String(filter.quarter) : ""}
+            onChange={(v) => setFilterField("quarter", v)}
+            options={[
+              { value: "1", label: "Q1 (Jan–Mar)" },
+              { value: "2", label: "Q2 (Apr–Jun)" },
+              { value: "3", label: "Q3 (Jul–Sep)" },
+              { value: "4", label: "Q4 (Oct–Dec)" },
+            ]}
           />
           {hasActiveFilter && (
             <button
