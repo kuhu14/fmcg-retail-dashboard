@@ -74,75 +74,45 @@ export function InternationalDashboard() {
 
   const activeInsightId = data.insights.find((i) => sameFilter(i.filter, filter))?.id ?? null;
   const hasActiveFilter = Object.keys(filter).some((k) => k !== "search" && filter[k as keyof IntlFilter] !== undefined);
+  const trendOf = (key: Parameters<typeof monthlyTrendDirection>[1]) => monthlyTrendDirection(data.monthlyTrend, key);
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <div className="flex flex-wrap items-center gap-2">
-          <FilterSelect
-            label="Countries"
-            value={filter.country ?? ""}
-            onChange={(v) => setFilterField("country", v)}
-            options={data.byCountry.map((c) => ({ value: c.country, label: c.country }))}
-          />
-          <FilterSelect
-            label="Categories"
-            value={filter.category ?? ""}
-            onChange={(v) => setFilterField("category", v)}
-            options={data.byCategory.map((c) => ({ value: c.category, label: c.category }))}
-          />
-          <FilterSelect
-            label="Payment Methods"
-            value={filter.paymentMethod ?? ""}
-            onChange={(v) => setFilterField("paymentMethod", v)}
-            options={data.byPaymentMethod.map((p) => ({ value: p.paymentMethod, label: p.paymentMethod }))}
-          />
-          <FilterSelect
-            label="Generations"
-            value={filter.generation ?? ""}
-            onChange={(v) => setFilterField("generation", v)}
-            options={data.byGeneration.map((g) => ({ value: g.generation, label: g.generation }))}
-          />
-          <div className="flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--background)] p-0.5">
-            {[
-              { label: "Last Year", year: 2024 },
-              { label: "Present Year", year: 2025 },
-            ].map((opt) => {
-              const active = filter.year === opt.year;
-              return (
-                <button
-                  key={opt.year}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setFilterField("year", active ? "" : String(opt.year))}
-                  className={`px-2.5 h-7 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
-                    active
-                      ? "bg-[var(--foreground)] text-[var(--background)]"
-                      : "text-[var(--foreground)] hover:bg-[var(--chart-gridline)]/40"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-          <FilterSelect
-            label="Years"
-            value={filter.year !== undefined ? String(filter.year) : ""}
-            onChange={(v) => setFilterField("year", v)}
-            options={data.yearlyTrend.map((y) => ({ value: y.year, label: y.year }))}
-          />
-          <FilterSelect
-            label="Quarters"
-            value={filter.quarter !== undefined ? String(filter.quarter) : ""}
-            onChange={(v) => setFilterField("quarter", v)}
-            options={[
-              { value: "1", label: "Q1 (Jan–Mar)" },
-              { value: "2", label: "Q2 (Apr–Jun)" },
-              { value: "3", label: "Q3 (Jul–Sep)" },
-              { value: "4", label: "Q4 (Oct–Dec)" },
-            ]}
-          />
+      <div className="flex flex-col gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--chart-surface)] p-3">
+        <div className="flex flex-wrap items-start gap-x-5 gap-y-3">
+          <FilterGroup label="Geography">
+            <FilterSelect
+              label="Countries"
+              value={filter.country ?? ""}
+              onChange={(v) => setFilterField("country", v)}
+              options={data.byCountry.map((c) => ({ value: c.country, label: c.country }))}
+            />
+          </FilterGroup>
+
+          <FilterGroup label="Category">
+            <FilterSelect
+              label="Categories"
+              value={filter.category ?? ""}
+              onChange={(v) => setFilterField("category", v)}
+              options={data.byCategory.map((c) => ({ value: c.category, label: c.category }))}
+            />
+          </FilterGroup>
+
+          <FilterGroup label="Customer">
+            <FilterSelect
+              label="Generations"
+              value={filter.generation ?? ""}
+              onChange={(v) => setFilterField("generation", v)}
+              options={data.byGeneration.map((g) => ({ value: g.generation, label: g.generation }))}
+            />
+            <FilterSelect
+              label="Payment Methods"
+              value={filter.paymentMethod ?? ""}
+              onChange={(v) => setFilterField("paymentMethod", v)}
+              options={data.byPaymentMethod.map((p) => ({ value: p.paymentMethod, label: p.paymentMethod }))}
+            />
+          </FilterGroup>
+
           {hasActiveFilter && (
             <button
               type="button"
@@ -153,13 +123,63 @@ export function InternationalDashboard() {
             </button>
           )}
         </div>
-      </Card>
+
+        <div className="flex flex-wrap items-start gap-x-5 gap-y-3 pt-3 border-t border-[var(--card-border)]">
+          <FilterGroup label="Time">
+            <div className="flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--background)] p-0.5">
+              {[
+                { label: "Last Year", year: 2025 },
+                { label: "Present Year", year: 2026 },
+              ].map((opt) => {
+                const active = filter.year === opt.year;
+                return (
+                  <button
+                    key={opt.year}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setFilterField("year", active ? "" : String(opt.year))}
+                    className={`px-2.5 h-7 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+                      active
+                        ? "bg-[var(--foreground)] text-[var(--background)]"
+                        : "text-[var(--foreground)] hover:bg-[var(--chart-gridline)]/40"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            <FilterSelect
+              label="Years"
+              value={filter.year !== undefined ? String(filter.year) : ""}
+              onChange={(v) => setFilterField("year", v)}
+              options={data.yearlyTrend.map((y) => ({ value: y.year, label: y.year }))}
+            />
+            <FilterSelect
+              label="Quarters"
+              value={filter.quarter !== undefined ? String(filter.quarter) : ""}
+              onChange={(v) => setFilterField("quarter", v)}
+              options={[
+                { value: "1", label: "Q1 (Jan–Mar)" },
+                { value: "2", label: "Q2 (Apr–Jun)" },
+                { value: "3", label: "Q3 (Jul–Sep)" },
+                { value: "4", label: "Q4 (Oct–Dec)" },
+              ]}
+            />
+          </FilterGroup>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Kpi label="Total Revenue" value={formatUSD(data.totals.revenue, { compact: true })} sub={`${formatNumber(data.totals.orders)} orders`} />
-        <Kpi label="Orders" value={formatNumber(data.totals.orders)} />
-        <Kpi label="Avg Order Value" value={formatUSD(data.totals.avgOrderValue)} />
-        <Kpi label="Units Sold" value={formatNumber(data.totals.units)} />
+        <Kpi
+          label="Total Revenue"
+          value={formatUSD(data.totals.revenue, { compact: true })}
+          sub={`${formatNumber(data.totals.orders)} orders`}
+          trend={trendOf("revenue")}
+        />
+        <Kpi label="Orders" value={formatNumber(data.totals.orders)} trend={trendOf("orders")} />
+        <Kpi label="Avg Order Value" value={formatUSD(data.totals.avgOrderValue)} trend={trendOf("avgOrderValue")} />
+        <Kpi label="Units Sold" value={formatNumber(data.totals.units)} trend={trendOf("units")} />
       </div>
 
       <section>
