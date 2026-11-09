@@ -129,6 +129,29 @@ export function InternationalDashboard() {
             onChange={(v) => setFilterField("generation", v)}
             options={data.byGeneration.map((g) => ({ value: g.generation, label: g.generation }))}
           />
+          <div className="flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--background)] p-0.5">
+            {[
+              { label: "Last Year", year: 2024 },
+              { label: "Present Year", year: 2025 },
+            ].map((opt) => {
+              const active = filter.year === opt.year;
+              return (
+                <button
+                  key={opt.year}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setFilterField("year", active ? "" : String(opt.year))}
+                  className={`px-2.5 h-7 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+                    active
+                      ? "bg-[var(--foreground)] text-[var(--background)]"
+                      : "text-[var(--foreground)] hover:bg-[var(--chart-gridline)]/40"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
           <FilterSelect
             label="Years"
             value={filter.year !== undefined ? String(filter.year) : ""}
