@@ -17,7 +17,7 @@ import {
 } from "./icons/KpiIcons";
 import { Card } from "./Card";
 
-const TREND_STYLE: Record<Trend, { text: string; glyph: string }> = {
+export const TREND_STYLE: Record<Trend, { text: string; glyph: string }> = {
   up: { text: "text-emerald-600 dark:text-emerald-400", glyph: "▲" },
   down: { text: "text-red-600 dark:text-red-400", glyph: "▼" },
   flat: { text: "text-blue-600 dark:text-blue-400", glyph: "→" },

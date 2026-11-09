@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { Insight, RecordFilter, Summary } from "@/lib/types";
 import { useGlobalRecordCount, useSummary } from "@/hooks/useApi";
+import { useIntlSummary } from "@/hooks/useIntlApi";
 import { API_BASE_URL } from "@/lib/api";
 import { DEPARTMENTS, type DepartmentId } from "@/lib/departments";
 import { Kpi } from "@/components/KpiCards";
@@ -12,6 +13,7 @@ import { DrillDownTable } from "@/components/DrillDownTable";
 import { Card } from "@/components/Card";
 import { ComingSoon } from "@/components/ComingSoon";
 import { InternationalDashboard } from "@/components/InternationalDashboard";
+import { DepartmentTopLine } from "@/components/DepartmentTopLine";
 import { FilterBar } from "@/components/FilterBar";
 import { FilterPanel } from "@/components/FilterPanel";
 import { Sidebar } from "@/components/Sidebar";
@@ -20,7 +22,7 @@ import { RevenueBarChart } from "@/components/charts/RevenueBarChart";
 import { MixDonutChart } from "@/components/charts/MixDonutChart";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { InventoryRiskChart } from "@/components/charts/InventoryRiskChart";
-import { formatINR, formatNumber, formatPct } from "@/lib/format";
+import { formatINR, formatNumber, formatPct, formatUSD } from "@/lib/format";
 import { monthlyTrendDirection } from "@/lib/trend";
 import { TIME_RANGES, type TimeRangeId } from "@/lib/timeRange";
 
@@ -71,6 +73,8 @@ export default function Home() {
 
   const { summary: data, loading, error } = useSummary(effectiveFilter);
   const globalRecordCount = useGlobalRecordCount(timeFilter);
+  // Unfiltered -- just to power the department top-line row on Overview.
+  const { summary: intlData } = useIntlSummary();
 
   function applyInsight(insight: Insight) {
     setFilter((prev) => (sameFilter(prev, insight.filter) ? EMPTY_FILTER : insight.filter));
