@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { Insight, RecordFilter, Summary } from "@/lib/types";
+import type { Insight, IntlSummary, RecordFilter, Summary } from "@/lib/types";
 import { useGlobalRecordCount, useSummary } from "@/hooks/useApi";
 import { useIntlSummary } from "@/hooks/useIntlApi";
 import { API_BASE_URL } from "@/lib/api";
@@ -13,7 +13,7 @@ import { DrillDownTable } from "@/components/DrillDownTable";
 import { Card } from "@/components/Card";
 import { ComingSoon } from "@/components/ComingSoon";
 import { InternationalDashboard } from "@/components/InternationalDashboard";
-import { DepartmentTopLine } from "@/components/DepartmentTopLine";
+import { DepartmentTopLine, type TopLineItem } from "@/components/DepartmentTopLine";
 import { FilterBar } from "@/components/FilterBar";
 import { FilterPanel } from "@/components/FilterPanel";
 import { Sidebar } from "@/components/Sidebar";
@@ -148,6 +148,52 @@ export default function Home() {
   const hasActiveFilter = hasDimensionFilter || hasTimeFilter;
   const trendOf = (key: keyof Summary["monthlyTrend"][number]) =>
     monthlyTrendDirection(data.monthlyTrend, key);
+  const intlTrendOf = (key: keyof IntlSummary["monthlyTrend"][number]) =>
+    intlData ? monthlyTrendDirection(intlData.monthlyTrend, key) : null;
+
+  const topLineItems: TopLineItem[] = [
+    {
+      id: "finance",
+      label: "Finance",
+      value: formatINR(data.totals.revenue, { compact: true }),
+      sub: "Total revenue",
+      trend: trendOf("revenue"),
+    },
+    {
+      id: "sales",
+      label: "Sales & Channel",
+      value: formatNumber(data.totals.orders),
+      sub: "Orders",
+      trend: trendOf("orders"),
+    },
+    {
+      id: "supply-chain",
+      label: "Supply Chain",
+      value: formatNumber(data.inventory.stockoutRisk),
+      sub: "Stockout risk",
+      trend: trendOf("stockoutRisk"),
+    },
+    {
+      id: "customer",
+      label: "Customer & Marketing",
+      value: formatPct(data.totals.loyaltyPct),
+      sub: "Loyalty members",
+      trend: trendOf("loyaltyPct"),
+    },
+    {
+      id: "exports",
+      label: "International / Exports",
+      value: intlData ? formatUSD(intlData.totals.revenue, { compact: true }) : "--",
+      sub: "Total revenue",
+      trend: intlTrendOf("revenue"),
+    },
+    {
+      id: "hr",
+      label: "HR",
+      value: "",
+      comingSoon: true,
+    },
+  ];
 
   return (
     <div className="min-h-screen md:flex">
@@ -179,6 +225,10 @@ export default function Home() {
             <ComingSoon label={dept.label} description={dept.description} />
           ) : (
             <>
+              {dept.id === "overview" && (
+                <DepartmentTopLine items={topLineItems} onSelect={setActiveDept} />
+              )}
+
               <FilterPanel
                 filter={filter}
                 onFieldChange={setFilterField}
