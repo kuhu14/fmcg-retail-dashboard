@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import date, timedelta
 
 SORT_COLUMNS = {
     "invoiceId": "invoice_id",
@@ -48,25 +49,40 @@ def build_where(filters: dict) -> tuple[str, list]:
         clauses.append("loyalty_flag = ?")
         params.append(filters["loyalty"])
 
+    # All of the date-based filters below compare directly against
+    # invoice_date as a plain range (rather than wrapping it in substr()),
+    # so SQLite can use idx_sales_date instead of scanning every row --
+    # matters once the table holds 300k+ rows (2024 real + 2025/2026
+    # simulated).
     if filters.get("month"):
-        clauses.append("substr(invoice_date, 1, 7) = ?")
-        params.append(filters["month"])
+        year, month = (int(x) for x in filters["month"].split("-"))
+        next_year, next_month = (year, month + 1) if month < 12 else (year + 1, 1)
+        clauses.append("invoice_date >= ? AND invoice_date < ?")
+        params.append(f"{year:04d}-{month:02d}-01")
+        params.append(f"{next_year:04d}-{next_month:02d}-01")
 
     if filters.get("sinceMonth"):
-        clauses.append("substr(invoice_date, 1, 7) >= ?")
-        params.append(filters["sinceMonth"])
+        clauses.append("invoice_date >= ?")
+        params.append(f"{filters['sinceMonth']}-01")
 
     if filters.get("year"):
-        clauses.append("substr(invoice_date, 1, 4) = ?")
-        params.append(str(filters["year"]))
+        year = int(filters["year"])
+        clauses.append("invoice_date >= ? AND invoice_date < ?")
+        params.append(f"{year:04d}-01-01")
+        params.append(f"{year + 1:04d}-01-01")
 
     if filters.get("dateFrom"):
-        clauses.append("substr(invoice_date, 1, 10) >= ?")
+        clauses.append("invoice_date >= ?")
         params.append(filters["dateFrom"])
 
     if filters.get("dateTo"):
-        clauses.append("substr(invoice_date, 1, 10) <= ?")
-        params.append(filters["dateTo"])
+        # dateTo is a calendar day with no time part; invoice_date has one,
+        # so compare against the start of the next day instead of needing
+        # substr() to strip it.
+        y, m, d = (int(x) for x in filters["dateTo"].split("-"))
+        next_day = date(y, m, d) + timedelta(days=1)
+        clauses.append("invoice_date < ?")
+        params.append(next_day.isoformat())
 
     if filters.get("stockRisk"):
         clauses.append("stock_on_hand <= reorder_level")

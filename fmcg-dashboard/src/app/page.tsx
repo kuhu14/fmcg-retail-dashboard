@@ -39,7 +39,7 @@ export default function Home() {
   // One toggle for the whole dashboard (not per-department, unlike the bar/
   // insight filters above) -- it narrows what every department means by
   // "the data" at once.
-  const [timeRange, setTimeRange] = useState<TimeRangeId>("12m");
+  const [timeRange, setTimeRange] = useState<TimeRangeId>("2024");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
   const tableRef = useRef<HTMLDivElement>(null);
