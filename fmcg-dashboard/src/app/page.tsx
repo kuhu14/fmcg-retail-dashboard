@@ -107,6 +107,8 @@ export default function Home() {
     : data.insights;
   const activeInsightId = insights.find((i) => sameFilter(i.filter, filter))?.id ?? null;
   const hasActiveFilter = Object.keys(filter).some((k) => k !== "search" && filter[k as keyof RecordFilter] !== undefined);
+  const trendOf = (key: Parameters<typeof monthlyTrendDirection>[1]) =>
+    monthlyTrendDirection(data.monthlyTrend, key);
 
   return (
     <div className="min-h-screen md:flex">
@@ -143,31 +145,37 @@ export default function Home() {
                       label="Total Revenue"
                       value={formatINR(data.totals.revenue, { compact: true })}
                       sub={`${formatNumber(data.totals.orders)} orders`}
+                      trend={trendOf("revenue")}
                     />
                     <Kpi
                       label="Gross Margin"
                       value={formatPct(data.totals.marginPct, 2)}
                       sub={formatINR(data.totals.margin, { compact: true })}
+                      trend={trendOf("marginPct")}
                     />
                     <Kpi
                       label="Avg Order Value"
                       value={formatINR(data.totals.avgOrderValue)}
                       sub={`${formatNumber(data.totals.units)} units sold`}
+                      trend={trendOf("avgOrderValue")}
                     />
                     <Kpi
                       label="Loyalty Members"
                       value={formatPct(data.totals.loyaltyPct)}
                       sub={`${formatNumber(data.totals.loyaltyCount)} of ${formatNumber(data.totals.orders)}`}
+                      trend={trendOf("loyaltyPct")}
                     />
                     <Kpi
                       label="Stockout Risk"
                       value={formatNumber(data.inventory.stockoutRisk)}
                       sub={`${formatPct(data.inventory.stockoutRiskPct)} of line items`}
+                      trend={trendOf("stockoutRisk")}
                     />
                     <Kpi
                       label="Overstocked"
                       value={formatPct(data.inventory.overstockPct)}
                       sub={`avg lead time ${data.inventory.avgLeadTimeDays}d`}
+                      trend={trendOf("overstockPct")}
                     />
                   </div>
                 )}
@@ -178,17 +186,24 @@ export default function Home() {
                       label="Total Revenue"
                       value={formatINR(data.totals.revenue, { compact: true })}
                       sub={`${formatNumber(data.totals.orders)} orders`}
+                      trend={trendOf("revenue")}
                     />
                     <Kpi
                       label="Total Cost"
                       value={formatINR(data.totals.cost, { compact: true })}
+                      trend={trendOf("cost")}
                     />
                     <Kpi
                       label="Gross Margin"
                       value={formatPct(data.totals.marginPct, 2)}
                       sub={formatINR(data.totals.margin, { compact: true })}
+                      trend={trendOf("marginPct")}
                     />
-                    <Kpi label="Avg Order Value" value={formatINR(data.totals.avgOrderValue)} />
+                    <Kpi
+                      label="Avg Order Value"
+                      value={formatINR(data.totals.avgOrderValue)}
+                      trend={trendOf("avgOrderValue")}
+                    />
                   </div>
                 )}
 
@@ -197,10 +212,15 @@ export default function Home() {
                     <Kpi
                       label="Total Revenue"
                       value={formatINR(data.totals.revenue, { compact: true })}
+                      trend={trendOf("revenue")}
                     />
-                    <Kpi label="Orders" value={formatNumber(data.totals.orders)} />
-                    <Kpi label="Units Sold" value={formatNumber(data.totals.units)} />
-                    <Kpi label="Avg Order Value" value={formatINR(data.totals.avgOrderValue)} />
+                    <Kpi label="Orders" value={formatNumber(data.totals.orders)} trend={trendOf("orders")} />
+                    <Kpi label="Units Sold" value={formatNumber(data.totals.units)} trend={trendOf("units")} />
+                    <Kpi
+                      label="Avg Order Value"
+                      value={formatINR(data.totals.avgOrderValue)}
+                      trend={trendOf("avgOrderValue")}
+                    />
                   </div>
                 )}
 
@@ -210,20 +230,24 @@ export default function Home() {
                       label="Stockout Risk"
                       value={formatNumber(data.inventory.stockoutRisk)}
                       sub={`${formatPct(data.inventory.stockoutRiskPct)} of line items`}
+                      trend={trendOf("stockoutRisk")}
                     />
                     <Kpi
                       label="Critical Stock"
                       value={formatNumber(data.inventory.criticalStock)}
                       sub="below half of reorder level"
+                      trend={trendOf("criticalStock")}
                     />
                     <Kpi
                       label="Overstocked"
                       value={formatPct(data.inventory.overstockPct)}
                       sub={formatNumber(data.inventory.overstock)}
+                      trend={trendOf("overstockPct")}
                     />
                     <Kpi
                       label="Avg Lead Time"
                       value={`${data.inventory.avgLeadTimeDays}d`}
+                      trend={trendOf("avgLeadTimeDays")}
                     />
                   </div>
                 )}
@@ -234,23 +258,27 @@ export default function Home() {
                       label="Loyalty Members"
                       value={formatPct(data.totals.loyaltyPct)}
                       sub={`${formatNumber(data.totals.loyaltyCount)} of ${formatNumber(data.totals.orders)}`}
+                      trend={trendOf("loyaltyPct")}
                     />
                     <Kpi
                       label="Avg Order Value (Loyalty)"
                       value={formatINR(
                         data.byLoyalty.find((l) => l.loyalty === 1)?.avgOrderValue ?? 0
                       )}
+                      trend={trendOf("avgOrderValueLoyal")}
                     />
                     <Kpi
                       label="Avg Order Value (Non-loyalty)"
                       value={formatINR(
                         data.byLoyalty.find((l) => l.loyalty === 0)?.avgOrderValue ?? 0
                       )}
+                      trend={trendOf("avgOrderValueNonLoyal")}
                     />
                     <Kpi
                       label="Age Missing"
                       value={formatPct(data.totals.ageMissingPct)}
                       sub={`${formatNumber(data.totals.ageMissing)} orders`}
+                      trend={trendOf("ageMissingPct")}
                     />
                   </div>
                 )}
