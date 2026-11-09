@@ -1,15 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getSunTimes } from "@/lib/sun";
+import { isDaytime } from "@/lib/sun";
 
 export type ThemeMode = "light" | "dark" | "system" | "sun";
-export type SunStatus = "ok" | "denied" | "unsupported" | null;
 
 const MODE_KEY = "fmcg-theme-mode";
-const GEO_KEY = "fmcg-theme-geo";
-const GEO_MAX_AGE_MS = 24 * 60 * 60 * 1000;
-const RECHECK_INTERVAL_MS = 5 * 60 * 1000;
+const RECHECK_INTERVAL_MS = 60 * 1000;
 
 function applyTheme(resolved: "light" | "dark" | null) {
   const root = document.documentElement;
@@ -28,7 +25,6 @@ function readStoredMode(): ThemeMode {
 
 export function useThemeMode() {
   const [mode, setModeState] = useState<ThemeMode>(readStoredMode);
-  const [sunStatus, setSunStatus] = useState<SunStatus>(null);
 
   const setMode = useCallback((m: ThemeMode) => {
     setModeState(m);
@@ -47,63 +43,14 @@ export function useThemeMode() {
       return;
     }
 
-    let cancelled = false;
-    let timer: ReturnType<typeof setInterval> | undefined;
-
-    const resolveWithCoords = (lat: number, lon: number) => {
-      const update = () => {
-        const { sunrise, sunset } = getSunTimes(new Date(), lat, lon);
-        const now = new Date();
-        applyTheme(now >= sunrise && now < sunset ? "light" : "dark");
-      };
-      update();
-      timer = setInterval(update, RECHECK_INTERVAL_MS);
-      setSunStatus("ok");
-    };
-
-    const fallback = (status: "denied" | "unsupported") => {
-      if (cancelled) return;
-      setSunStatus(status);
-      applyTheme(null);
-    };
-
-    try {
-      const cachedRaw = localStorage.getItem(GEO_KEY);
-      const cached = cachedRaw ? (JSON.parse(cachedRaw) as { lat: number; lon: number; at: number }) : null;
-      if (cached && Date.now() - cached.at < GEO_MAX_AGE_MS) {
-        resolveWithCoords(cached.lat, cached.lon);
-        return () => {
-          cancelled = true;
-          if (timer) clearInterval(timer);
-        };
-      }
-    } catch {}
-
-    if (!navigator.geolocation) {
-      fallback("unsupported");
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        if (cancelled) return;
-        const { latitude, longitude } = pos.coords;
-        try {
-          localStorage.setItem(GEO_KEY, JSON.stringify({ lat: latitude, lon: longitude, at: Date.now() }));
-        } catch {}
-        resolveWithCoords(latitude, longitude);
-      },
-      () => fallback("denied"),
-      { timeout: 8000 }
-    );
-
-    return () => {
-      cancelled = true;
-      if (timer) clearInterval(timer);
-    };
+    // "sun" mode: silently re-check the clock on an interval and flip the
+    // theme at the 6am/6pm boundary -- no visible timer or countdown, just
+    // the background check.
+    const update = () => applyTheme(isDaytime(new Date()) ? "light" : "dark");
+    update();
+    const timer = setInterval(update, RECHECK_INTERVAL_MS);
+    return () => clearInterval(timer);
   }, [mode]);
 
-  return { mode, setMode, sunStatus };
+  return { mode, setMode };
 }
