@@ -121,7 +121,7 @@ export default function Home() {
     : data.insights;
   const activeInsightId = insights.find((i) => sameFilter(i.filter, filter))?.id ?? null;
   const hasDimensionFilter = Object.keys(filter).some((k) => k !== "search" && filter[k as keyof RecordFilter] !== undefined);
-  const hasActiveFilter = hasDimensionFilter || monthsBack !== null;
+  const hasActiveFilter = hasDimensionFilter || hasTimeFilter;
   const trendOf = (key: Parameters<typeof monthlyTrendDirection>[1]) =>
     monthlyTrendDirection(data.monthlyTrend, key);
 
