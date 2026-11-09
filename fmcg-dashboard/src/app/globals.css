@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Scales every rem-based Tailwind text size down uniformly (browser default
+   is 16px), rather than nudging each text-xs/sm/etc. className individually. */
+html {
+  font-size: 93.75%;
+}
+
 :root {
   --background: #f9f9f7;
   --foreground: #0b0b0b;

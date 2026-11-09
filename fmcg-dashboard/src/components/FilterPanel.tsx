@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import type { RecordFilter, Summary } from "@/lib/types";
 import { monthLabel } from "@/lib/format";
 import { TimeRangeToggle } from "./TimeRangeToggle";
-import type { TimeRangeId } from "@/lib/timeRange";
+import { DATASET_MAX_DATE, DATASET_MIN_DATE, type TimeRangeId } from "@/lib/timeRange";
 
 function FilterGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -51,12 +51,20 @@ export function FilterPanel({
   data,
   timeRange,
   onTimeRangeChange,
+  customFrom,
+  customTo,
+  onCustomFromChange,
+  onCustomToChange,
 }: {
   filter: RecordFilter;
   onFieldChange: (key: keyof RecordFilter, value: string) => void;
   data: Summary;
   timeRange: TimeRangeId;
   onTimeRangeChange: (id: TimeRangeId) => void;
+  customFrom: string;
+  customTo: string;
+  onCustomFromChange: (value: string) => void;
+  onCustomToChange: (value: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--chart-surface)] p-3">
@@ -104,12 +112,36 @@ export function FilterPanel({
       <div className="flex flex-wrap items-start gap-x-5 gap-y-3 pt-3 border-t border-[var(--card-border)]">
         <FilterGroup label="Time">
           <TimeRangeToggle value={timeRange} onChange={onTimeRangeChange} />
-          <FilterSelect
-            label="Months"
-            value={filter.month ?? ""}
-            onChange={(v) => onFieldChange("month", v)}
-            options={data.monthlyTrend.map((m) => ({ value: m.month, label: monthLabel(m.month) }))}
-          />
+          {timeRange === "custom" ? (
+            <>
+              <input
+                type="date"
+                aria-label="From date"
+                value={customFrom}
+                min={DATASET_MIN_DATE}
+                max={customTo || DATASET_MAX_DATE}
+                onChange={(e) => onCustomFromChange(e.target.value)}
+                className="text-xs rounded-md border border-[var(--card-border)] bg-[var(--background)] px-2 py-1.5 text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <span className="text-xs text-[var(--chart-muted)]">to</span>
+              <input
+                type="date"
+                aria-label="To date"
+                value={customTo}
+                min={customFrom || DATASET_MIN_DATE}
+                max={DATASET_MAX_DATE}
+                onChange={(e) => onCustomToChange(e.target.value)}
+                className="text-xs rounded-md border border-[var(--card-border)] bg-[var(--background)] px-2 py-1.5 text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </>
+          ) : (
+            <FilterSelect
+              label="Months"
+              value={filter.month ?? ""}
+              onChange={(v) => onFieldChange("month", v)}
+              options={data.monthlyTrend.map((m) => ({ value: m.month, label: monthLabel(m.month) }))}
+            />
+          )}
         </FilterGroup>
 
         <FilterGroup label="Customer">

@@ -39,16 +39,21 @@ export default function Home() {
   // insight filters above) -- it narrows what every department means by
   // "the data" at once.
   const [timeRange, setTimeRange] = useState<TimeRangeId>("12m");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
   const tableRef = useRef<HTMLDivElement>(null);
 
   const dept = useMemo(() => DEPARTMENTS.find((d) => d.id === activeDept)!, [activeDept]);
   const filter = filtersByDept[activeDept] ?? EMPTY_FILTER;
   const activeRange = TIME_RANGES.find((r) => r.id === timeRange)!;
-  const timeFilter: RecordFilter = activeRange.year
-    ? { year: activeRange.year }
-    : activeRange.monthsBack
-      ? { monthsBack: activeRange.monthsBack }
-      : EMPTY_FILTER;
+  const timeFilter: RecordFilter =
+    timeRange === "custom"
+      ? { ...(customFrom && { dateFrom: customFrom }), ...(customTo && { dateTo: customTo }) }
+      : activeRange.year
+        ? { year: activeRange.year }
+        : activeRange.monthsBack
+          ? { monthsBack: activeRange.monthsBack }
+          : EMPTY_FILTER;
   const hasTimeFilter = Object.keys(timeFilter).length > 0;
   const effectiveFilter: RecordFilter = hasTimeFilter ? { ...filter, ...timeFilter } : filter;
 
@@ -171,6 +176,10 @@ export default function Home() {
                 data={data}
                 timeRange={timeRange}
                 onTimeRangeChange={setTimeRange}
+                customFrom={customFrom}
+                customTo={customTo}
+                onCustomFromChange={setCustomFrom}
+                onCustomToChange={setCustomTo}
               />
               <FilterBar filter={filter} onReset={resetFilter} />
 
