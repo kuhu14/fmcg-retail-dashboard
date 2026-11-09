@@ -18,7 +18,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background: #0d0d0d;
     --foreground: #ffffff;
     --chart-surface: #1a1a19;
@@ -27,6 +27,16 @@
     --chart-muted: #898781;
     --card-border: rgba(255, 255, 255, 0.1);
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #0d0d0d;
+  --foreground: #ffffff;
+  --chart-surface: #1a1a19;
+  --chart-gridline: #2c2c2a;
+  --chart-axis: #383835;
+  --chart-muted: #898781;
+  --card-border: rgba(255, 255, 255, 0.1);
 }
 
 body {
