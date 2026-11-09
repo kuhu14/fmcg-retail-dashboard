@@ -13,8 +13,8 @@ export function ThemeToggle() {
   const { mode, setMode, sunStatus } = useThemeMode();
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--chart-surface)] p-0.5">
+    <div className="flex flex-col items-end gap-1" suppressHydrationWarning>
+      <div className="flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--chart-surface)] p-0.5" suppressHydrationWarning>
         {OPTIONS.map((opt) => {
           const active = mode === opt.id;
           return (

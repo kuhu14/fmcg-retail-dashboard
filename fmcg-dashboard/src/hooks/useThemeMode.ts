@@ -17,16 +17,18 @@ function applyTheme(resolved: "light" | "dark" | null) {
   else root.removeAttribute("data-theme");
 }
 
-export function useThemeMode() {
-  const [mode, setModeState] = useState<ThemeMode>("system");
-  const [sunStatus, setSunStatus] = useState<SunStatus>(null);
+function readStoredMode(): ThemeMode {
+  if (typeof window === "undefined") return "system";
+  try {
+    return (localStorage.getItem(MODE_KEY) as ThemeMode | null) ?? "system";
+  } catch {
+    return "system";
+  }
+}
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(MODE_KEY) as ThemeMode | null;
-      if (saved) setModeState(saved);
-    } catch {}
-  }, []);
+export function useThemeMode() {
+  const [mode, setModeState] = useState<ThemeMode>(readStoredMode);
+  const [sunStatus, setSunStatus] = useState<SunStatus>(null);
 
   const setMode = useCallback((m: ThemeMode) => {
     setModeState(m);
@@ -37,12 +39,10 @@ export function useThemeMode() {
 
   useEffect(() => {
     if (mode === "light" || mode === "dark") {
-      setSunStatus(null);
       applyTheme(mode);
       return;
     }
     if (mode === "system") {
-      setSunStatus(null);
       applyTheme(null);
       return;
     }
