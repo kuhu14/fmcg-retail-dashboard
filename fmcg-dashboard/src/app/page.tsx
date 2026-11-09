@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { Insight, RecordFilter } from "@/lib/types";
+import type { Insight, RecordFilter, Summary } from "@/lib/types";
 import { useGlobalRecordCount, useSummary } from "@/hooks/useApi";
 import { API_BASE_URL } from "@/lib/api";
 import { DEPARTMENTS, type DepartmentId } from "@/lib/departments";
@@ -142,7 +142,7 @@ export default function Home() {
   const activeInsightId = insights.find((i) => sameFilter(i.filter, filter))?.id ?? null;
   const hasDimensionFilter = Object.keys(filter).some((k) => k !== "search" && filter[k as keyof RecordFilter] !== undefined);
   const hasActiveFilter = hasDimensionFilter || hasTimeFilter;
-  const trendOf = (key: Parameters<typeof monthlyTrendDirection>[1]) =>
+  const trendOf = (key: keyof Summary["monthlyTrend"][number]) =>
     monthlyTrendDirection(data.monthlyTrend, key);
 
   return (

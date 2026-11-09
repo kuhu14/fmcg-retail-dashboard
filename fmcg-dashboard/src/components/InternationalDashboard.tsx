@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { IntlFilter, IntlInsight } from "@/lib/types";
+import type { IntlFilter, IntlInsight, IntlSummary } from "@/lib/types";
 import { useIntlSummary } from "@/hooks/useIntlApi";
 import { Kpi } from "./KpiCards";
 import { InsightCards } from "./InsightCards";
@@ -74,7 +74,7 @@ export function InternationalDashboard() {
 
   const activeInsightId = data.insights.find((i) => sameFilter(i.filter, filter))?.id ?? null;
   const hasActiveFilter = Object.keys(filter).some((k) => k !== "search" && filter[k as keyof IntlFilter] !== undefined);
-  const trendOf = (key: Parameters<typeof monthlyTrendDirection>[1]) => monthlyTrendDirection(data.monthlyTrend, key);
+  const trendOf = (key: keyof IntlSummary["monthlyTrend"][number]) => monthlyTrendDirection(data.monthlyTrend, key);
 
   return (
     <div className="flex flex-col gap-6">

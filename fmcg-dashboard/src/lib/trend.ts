@@ -4,9 +4,9 @@ export type Trend = "up" | "down" | "flat";
  * there aren't at least two months in the (possibly filtered) data to compare.
  * Generic over any monthly-breakdown row shape (FMCG's Summary or the
  * International department's IntlSummary both qualify). */
-export function monthlyTrendDirection<T extends Record<string, unknown>>(
+export function monthlyTrendDirection<T, K extends keyof T>(
   monthlyTrend: T[],
-  key: keyof T
+  key: K
 ): Trend | null {
   if (monthlyTrend.length < 2) return null;
   const latest = monthlyTrend[monthlyTrend.length - 1][key] as number;
