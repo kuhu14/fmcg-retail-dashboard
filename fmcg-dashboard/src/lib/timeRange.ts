@@ -17,8 +17,8 @@ export interface TimeRangeOption {
 
 export const TIME_RANGES: TimeRangeOption[] = [
   { id: "2024", label: "2024", monthsBack: null, year: 2024 },
-  { id: "12m", label: "Last Year", monthsBack: null, year: 2025 },
-  { id: "present", label: "Present Year", monthsBack: null, year: 2026 },
+  { id: "12m", label: "Last Year (2025)", monthsBack: null, year: 2025 },
+  { id: "present", label: "Present Year (2026)", monthsBack: null, year: 2026 },
   { id: "9m", label: "9 Months", monthsBack: 9 },
   { id: "6m", label: "6 Months", monthsBack: 6 },
   { id: "3m", label: "Quarterly", monthsBack: 3 },

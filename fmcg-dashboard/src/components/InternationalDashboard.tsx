@@ -128,8 +128,8 @@ export function InternationalDashboard() {
           <FilterGroup label="Time">
             <div className="flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--background)] p-0.5">
               {[
-                { label: "Last Year", year: 2025 },
-                { label: "Present Year", year: 2026 },
+                { label: "Last Year (2025)", year: 2025 },
+                { label: "Present Year (2026)", year: 2026 },
               ].map((opt) => {
                 const active = filter.year === opt.year;
                 return (
