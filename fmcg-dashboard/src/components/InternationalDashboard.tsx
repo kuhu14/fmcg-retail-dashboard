@@ -113,18 +113,6 @@ export function InternationalDashboard() {
             />
           </FilterGroup>
 
-          {hasActiveFilter && (
-            <button
-              type="button"
-              onClick={() => setFilter(EMPTY_FILTER)}
-              className="ml-auto text-xs font-medium rounded-md border border-[var(--card-border)] px-2.5 py-1.5 text-[var(--foreground)] hover:bg-[var(--chart-gridline)]/40"
-            >
-              Reset
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-start gap-x-5 gap-y-3 pt-3 border-t border-[var(--card-border)]">
           <FilterGroup label="Time">
             <div className="flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--background)] p-0.5">
               {[
@@ -167,6 +155,16 @@ export function InternationalDashboard() {
               ]}
             />
           </FilterGroup>
+
+          {hasActiveFilter && (
+            <button
+              type="button"
+              onClick={() => setFilter(EMPTY_FILTER)}
+              className="ml-auto text-xs font-medium rounded-md border border-[var(--card-border)] px-2.5 py-1.5 text-[var(--foreground)] hover:bg-[var(--chart-gridline)]/40"
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
 

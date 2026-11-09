@@ -68,9 +68,7 @@ export function FilterPanel({
             options={data.byStoreFormat.map((s) => ({ value: s.storeFormat, label: s.storeFormat }))}
           />
         </FilterGroup>
-      </div>
 
-      <div className="flex flex-wrap items-start gap-x-5 gap-y-3 pt-3 border-t border-[var(--card-border)]">
         <FilterGroup label="Time">
           <TimeRangeToggle value={timeRange} onChange={onTimeRangeChange} />
           {timeRange === "custom" ? (
