@@ -18,11 +18,11 @@ function applyTheme(resolved: "light" | "dark" | null) {
 }
 
 function readStoredMode(): ThemeMode {
-  if (typeof window === "undefined") return "system";
+  if (typeof window === "undefined") return "sun";
   try {
-    return (localStorage.getItem(MODE_KEY) as ThemeMode | null) ?? "system";
+    return (localStorage.getItem(MODE_KEY) as ThemeMode | null) ?? "sun";
   } catch {
-    return "system";
+    return "sun";
   }
 }
 
