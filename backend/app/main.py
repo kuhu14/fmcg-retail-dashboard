@@ -78,9 +78,9 @@ def filters_cache_key(filters: dict) -> tuple:
 # automatically instead of serving stale data forever.
 
 
-@lru_cache(maxsize=4)
-def _cached_summary(version: float) -> dict:
-    return build_summary(get_db())
+@lru_cache(maxsize=256)
+def _cached_summary(version: float, filters_key: tuple) -> dict:
+    return build_summary(get_db(), dict(filters_key))
 
 
 @lru_cache(maxsize=1024)
@@ -97,8 +97,11 @@ def health():
 
 
 @app.get("/api/summary")
-def get_summary():
-    return _cached_summary(db_version())
+def get_summary(filters: dict = Depends(record_filters)):
+    # `search` only makes sense against individual invoice rows, not
+    # aggregates, so it's dropped before it can affect the summary.
+    summary_filters = {k: v for k, v in filters.items() if k != "search"}
+    return _cached_summary(db_version(), filters_cache_key(summary_filters))
 
 
 @app.get("/api/records")

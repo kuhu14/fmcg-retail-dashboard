@@ -4,26 +4,63 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { DecodedRecord, RecordFilter, RecordsResponse, Summary } from "@/lib/types";
 
-export function useSummary() {
+// `search` (free-text invoice ID matching) only makes sense against
+// individual rows, not aggregates, so it never reaches /api/summary.
+function summaryParams(filter: RecordFilter) {
+  const rest = { ...filter };
+  delete rest.search;
+  return filterToParams(rest);
+}
+
+// Note on `loading`: see the comment on useRecords below -- same
+// "keep showing the previous summary while a new filter loads" behavior.
+export function useSummary(filter: RecordFilter = {}) {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    api
+      .get<Summary>("/api/summary", { params: summaryParams(filter), signal: controller.signal })
+      .then((res) => {
+        if (!cancelled) setSummary(res.data);
+      })
+      .catch((err) => {
+        if (!cancelled && err.name !== "CanceledError") {
+          setError(err.message ?? "Failed to load summary");
+        }
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(filter)]);
+
+  return { summary, loading: !summary && !error, error };
+}
+
+// The drill-down table shows "N of TOTAL records match" -- TOTAL must stay
+// the whole dataset's size regardless of any active department filter, so
+// it's fetched once, unfiltered, rather than derived from a filtered summary.
+export function useGlobalRecordCount() {
+  const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     api
       .get<Summary>("/api/summary")
       .then((res) => {
-        if (!cancelled) setSummary(res.data);
+        if (!cancelled) setCount(res.data.meta.recordCount);
       })
-      .catch((err) => {
-        if (!cancelled) setError(err.message ?? "Failed to load summary");
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, []);
 
-  return { summary, loading: !summary && !error, error };
+  return count;
 }
 
 function filterToParams(filter: RecordFilter): Record<string, string | number | boolean> {

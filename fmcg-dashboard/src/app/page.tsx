@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { Insight, RecordFilter } from "@/lib/types";
-import { useSummary } from "@/hooks/useApi";
+import { useGlobalRecordCount, useSummary } from "@/hooks/useApi";
 import { API_BASE_URL } from "@/lib/api";
 import { DEPARTMENTS, type DepartmentId } from "@/lib/departments";
 import { Kpi } from "@/components/KpiCards";
@@ -11,6 +11,7 @@ import { DataSourceInfo } from "@/components/DataSourceInfo";
 import { DrillDownTable } from "@/components/DrillDownTable";
 import { Card } from "@/components/Card";
 import { ComingSoon } from "@/components/ComingSoon";
+import { FilterBar } from "@/components/FilterBar";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RevenueBarChart } from "@/components/charts/RevenueBarChart";
@@ -19,18 +20,39 @@ import { TrendChart } from "@/components/charts/TrendChart";
 import { InventoryRiskChart } from "@/components/charts/InventoryRiskChart";
 import { formatINR, formatNumber, formatPct } from "@/lib/format";
 
+const EMPTY_FILTER: RecordFilter = {};
+
+function sameFilter(a: RecordFilter, b: RecordFilter): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 export default function Home() {
-  const { summary: data, loading, error } = useSummary();
-  const [filter, setFilter] = useState<RecordFilter>({});
-  const [activeInsightId, setActiveInsightId] = useState<string | null>(null);
   const [activeDept, setActiveDept] = useState<DepartmentId>("overview");
+  // Each department keeps its own filter so clicking a bar in Finance never
+  // touches what Sales or Overview are showing, and switching tabs doesn't
+  // carry a filter over to an unrelated department.
+  const [filtersByDept, setFiltersByDept] = useState<Partial<Record<DepartmentId, RecordFilter>>>({});
   const tableRef = useRef<HTMLDivElement>(null);
 
   const dept = useMemo(() => DEPARTMENTS.find((d) => d.id === activeDept)!, [activeDept]);
+  const filter = filtersByDept[activeDept] ?? EMPTY_FILTER;
+
+  const setFilter = useCallback(
+    (next: RecordFilter | ((prev: RecordFilter) => RecordFilter)) => {
+      setFiltersByDept((prev) => {
+        const current = prev[activeDept] ?? EMPTY_FILTER;
+        const resolved = typeof next === "function" ? next(current) : next;
+        return { ...prev, [activeDept]: resolved };
+      });
+    },
+    [activeDept]
+  );
+
+  const { summary: data, loading, error } = useSummary(filter);
+  const globalRecordCount = useGlobalRecordCount();
 
   function applyInsight(insight: Insight) {
-    setFilter(insight.filter);
-    setActiveInsightId((prev) => (prev === insight.id ? null : insight.id));
+    setFilter((prev) => (sameFilter(prev, insight.filter) ? EMPTY_FILTER : insight.filter));
     tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -44,8 +66,11 @@ export default function Home() {
       }
       return { ...prev, ...patch };
     });
-    setActiveInsightId(null);
     tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function resetFilter() {
+    setFilter(EMPTY_FILTER);
   }
 
   if (error) {
@@ -79,6 +104,8 @@ export default function Home() {
   const insights = dept.insightIds
     ? data.insights.filter((i) => dept.insightIds!.includes(i.id))
     : data.insights;
+  const activeInsightId = insights.find((i) => sameFilter(i.filter, filter))?.id ?? null;
+  const hasActiveFilter = Object.keys(filter).some((k) => k !== "search" && filter[k as keyof RecordFilter] !== undefined);
 
   return (
     <div className="min-h-screen md:flex">
@@ -90,9 +117,11 @@ export default function Home() {
             <div>
               <h1 className="text-lg font-semibold text-[var(--foreground)]">{dept.label}</h1>
               <p className="text-xs text-[var(--chart-muted)]">
-                {dept.id === "overview"
+                {dept.id === "overview" && !hasActiveFilter
                   ? `India · Calendar Year 2024 · ${data.meta.recordCount.toLocaleString("en-IN")} transactions across 8 cities`
-                  : dept.description}
+                  : hasActiveFilter
+                    ? `${data.meta.recordCount.toLocaleString("en-IN")} matching transactions`
+                    : dept.description}
               </p>
             </div>
             <ThemeToggle />
@@ -104,6 +133,8 @@ export default function Home() {
             <ComingSoon label={dept.label} description={dept.description} />
           ) : (
             <>
+              <FilterBar filter={filter} onReset={resetFilter} />
+
               <section>
                 {dept.id === "overview" && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -349,7 +380,7 @@ export default function Home() {
 
               <section ref={tableRef}>
                 <DrillDownTable
-                  totalRecords={data.meta.recordCount}
+                  totalRecords={globalRecordCount ?? data.meta.recordCount}
                   filter={filter}
                   onFilterChange={setFilter}
                 />

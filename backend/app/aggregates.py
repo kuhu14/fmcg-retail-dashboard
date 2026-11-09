@@ -2,8 +2,14 @@
 SQL aggregate queries against the `sales` table. Mirrors the logic that used
 to live in fmcg-dashboard/scripts/prepare-data.mjs, now computed on demand
 from the live database instead of a build-time JSON snapshot.
+
+Every query here accepts the same `filters` dict as /api/records, so the
+whole summary (not just the drill-down table) can be scoped to e.g. a single
+category clicked on a bar chart.
 """
 import sqlite3
+
+from app.records import build_where
 
 
 def r2(x: float) -> float:
@@ -25,7 +31,11 @@ def fmt_in(n: int) -> str:
     return ",".join(parts) + "," + last3
 
 
-def dim_breakdown(conn: sqlite3.Connection, column: str, key_name: str) -> list[dict]:
+def _and_where(where: str, extra: str) -> str:
+    return f"{where} AND {extra}" if where else f"WHERE {extra}"
+
+
+def dim_breakdown(conn: sqlite3.Connection, column: str, key_name: str, where: str, params: list) -> list[dict]:
     rows = conn.execute(
         f"""
         SELECT {column} AS name,
@@ -35,9 +45,11 @@ def dim_breakdown(conn: sqlite3.Connection, column: str, key_name: str) -> list[
                SUM(units) AS units,
                COUNT(*) AS orders
         FROM sales
+        {where}
         GROUP BY {column}
         ORDER BY revenue DESC
-        """
+        """,
+        params,
     ).fetchall()
     out = []
     for row in rows:
@@ -56,52 +68,60 @@ def dim_breakdown(conn: sqlite3.Connection, column: str, key_name: str) -> list[
     return out
 
 
-def build_summary(conn: sqlite3.Connection) -> dict:
+def build_summary(conn: sqlite3.Connection, filters: dict | None = None) -> dict:
+    where, params = build_where(filters or {})
+
     totals_row = conn.execute(
-        """
+        f"""
         SELECT SUM(revenue) AS revenue, SUM(cost) AS cost, SUM(margin) AS margin,
                SUM(units) AS units, COUNT(*) AS orders,
                SUM(CASE WHEN loyalty_flag = 1 THEN 1 ELSE 0 END) AS loyalty_count,
                SUM(CASE WHEN customer_age IS NULL THEN 1 ELSE 0 END) AS age_missing
         FROM sales
-        """
+        {where}
+        """,
+        params,
     ).fetchone()
 
-    orders = totals_row["orders"]
-    revenue = totals_row["revenue"]
-    margin = totals_row["margin"]
+    orders = totals_row["orders"] or 0
+    revenue = totals_row["revenue"] or 0
+    margin = totals_row["margin"] or 0
+    loyalty_count = totals_row["loyalty_count"] or 0
+    age_missing = totals_row["age_missing"] or 0
 
     totals = {
         "revenue": r2(revenue),
         "cost": r2(totals_row["cost"]),
         "margin": r2(margin),
-        "marginPct": r2((margin / revenue) * 100),
-        "units": totals_row["units"],
+        "marginPct": r2((margin / revenue) * 100) if revenue else 0.0,
+        "units": totals_row["units"] or 0,
         "orders": orders,
-        "avgOrderValue": r2(revenue / orders),
-        "loyaltyCount": totals_row["loyalty_count"],
-        "loyaltyPct": r2((totals_row["loyalty_count"] / orders) * 100),
-        "ageMissing": totals_row["age_missing"],
-        "ageMissingPct": r2((totals_row["age_missing"] / orders) * 100),
+        "avgOrderValue": r2(revenue / orders) if orders else 0.0,
+        "loyaltyCount": loyalty_count,
+        "loyaltyPct": r2((loyalty_count / orders) * 100) if orders else 0.0,
+        "ageMissing": age_missing,
+        "ageMissingPct": r2((age_missing / orders) * 100) if orders else 0.0,
     }
 
-    by_city = dim_breakdown(conn, "city", "city")
-    by_category = dim_breakdown(conn, "category", "category")
-    by_channel = dim_breakdown(conn, "channel", "channel")
-    by_payment_mode = dim_breakdown(conn, "payment_mode", "paymentMode")
-    by_store_format = dim_breakdown(conn, "store_format", "storeFormat")
-    by_brand = dim_breakdown(conn, "brand", "brand")
-    by_gender = dim_breakdown(conn, "COALESCE(customer_gender, 'N/A')", "gender")
+    by_city = dim_breakdown(conn, "city", "city", where, params)
+    by_category = dim_breakdown(conn, "category", "category", where, params)
+    by_channel = dim_breakdown(conn, "channel", "channel", where, params)
+    by_payment_mode = dim_breakdown(conn, "payment_mode", "paymentMode", where, params)
+    by_store_format = dim_breakdown(conn, "store_format", "storeFormat", where, params)
+    by_brand = dim_breakdown(conn, "brand", "brand", where, params)
+    by_gender = dim_breakdown(conn, "COALESCE(customer_gender, 'N/A')", "gender", where, params)
 
     monthly_rows = conn.execute(
-        """
+        f"""
         SELECT substr(invoice_date, 1, 7) AS month,
                SUM(revenue) AS revenue, SUM(margin) AS margin,
                SUM(units) AS units, COUNT(*) AS orders
         FROM sales
+        {where}
         GROUP BY month
         ORDER BY month
-        """
+        """,
+        params,
     ).fetchall()
     monthly_trend = [
         {
@@ -117,18 +137,20 @@ def build_summary(conn: sqlite3.Connection) -> dict:
 
     age_bucket_defs = [("18-25", 18, 25), ("26-35", 26, 35), ("36-45", 36, 45), ("46-55", 46, 55), ("56-65", 56, 65)]
     age_buckets = {}
+    age_where = _and_where(where, "customer_age BETWEEN ? AND ?")
     for label, lo, hi in age_bucket_defs:
         c = conn.execute(
-            "SELECT COUNT(*) AS c FROM sales WHERE customer_age BETWEEN ? AND ?", (lo, hi)
+            f"SELECT COUNT(*) AS c FROM sales {age_where}", [*params, lo, hi]
         ).fetchone()["c"]
         age_buckets[label] = c
 
     loyalty_rows = conn.execute(
-        """
+        f"""
         SELECT loyalty_flag AS loyalty, SUM(revenue) AS revenue, SUM(margin) AS margin,
                SUM(units) AS units, COUNT(*) AS orders
-        FROM sales GROUP BY loyalty_flag
-        """
+        FROM sales {where} GROUP BY loyalty_flag
+        """,
+        params,
     ).fetchall()
     by_loyalty = [
         {
@@ -136,14 +158,14 @@ def build_summary(conn: sqlite3.Connection) -> dict:
             "revenue": r2(row["revenue"]),
             "orders": row["orders"],
             "units": row["units"],
-            "avgOrderValue": r2(row["revenue"] / row["orders"]),
+            "avgOrderValue": r2(row["revenue"] / row["orders"]) if row["orders"] else 0.0,
             "marginPct": r2((row["margin"] / row["revenue"]) * 100) if row["revenue"] else 0.0,
         }
         for row in loyalty_rows
     ]
 
     inv_row = conn.execute(
-        """
+        f"""
         SELECT
           SUM(CASE WHEN stock_on_hand <= reorder_level THEN 1 ELSE 0 END) AS stockout_risk,
           SUM(CASE WHEN stock_on_hand < 0.5 * reorder_level THEN 1 ELSE 0 END) AS critical_stock,
@@ -152,43 +174,45 @@ def build_summary(conn: sqlite3.Connection) -> dict:
           AVG(stock_on_hand) AS avg_soh,
           AVG(reorder_level) AS avg_rop
         FROM sales
-        """
+        {where}
+        """,
+        params,
     ).fetchone()
 
     lead_time_by_category = [
         {"category": row["category"], "avgLeadTimeDays": r2(row["avg_lt"])}
         for row in conn.execute(
-            "SELECT category, AVG(lead_time_days) AS avg_lt FROM sales GROUP BY category ORDER BY avg_lt DESC"
+            f"SELECT category, AVG(lead_time_days) AS avg_lt FROM sales {where} GROUP BY category ORDER BY avg_lt DESC",
+            params,
         ).fetchall()
     ]
 
+    risk_where = _and_where(where, "stock_on_hand <= reorder_level")
     risk_by_category = [
         {"category": row["category"], "atRiskOrders": row["c"]}
         for row in conn.execute(
-            """
-            SELECT category, COUNT(*) AS c FROM sales
-            WHERE stock_on_hand <= reorder_level
-            GROUP BY category ORDER BY c DESC
-            """
+            f"SELECT category, COUNT(*) AS c FROM sales {risk_where} GROUP BY category ORDER BY c DESC",
+            params,
         ).fetchall()
     ]
     risk_by_city = [
         {"city": row["city"], "atRiskOrders": row["c"]}
         for row in conn.execute(
-            """
-            SELECT city, COUNT(*) AS c FROM sales
-            WHERE stock_on_hand <= reorder_level
-            GROUP BY city ORDER BY c DESC
-            """
+            f"SELECT city, COUNT(*) AS c FROM sales {risk_where} GROUP BY city ORDER BY c DESC",
+            params,
         ).fetchall()
     ]
 
+    stockout_risk = inv_row["stockout_risk"] or 0
+    critical_stock = inv_row["critical_stock"] or 0
+    overstock_count = inv_row["overstock"] or 0
+
     inventory = {
-        "stockoutRisk": inv_row["stockout_risk"],
-        "stockoutRiskPct": r2((inv_row["stockout_risk"] / orders) * 100),
-        "criticalStock": inv_row["critical_stock"],
-        "overstock": inv_row["overstock"],
-        "overstockPct": r2((inv_row["overstock"] / orders) * 100),
+        "stockoutRisk": stockout_risk,
+        "stockoutRiskPct": r2((stockout_risk / orders) * 100) if orders else 0.0,
+        "criticalStock": critical_stock,
+        "overstock": overstock_count,
+        "overstockPct": r2((overstock_count / orders) * 100) if orders else 0.0,
         "avgLeadTimeDays": r2(inv_row["avg_lead_time"]),
         "avgStockOnHand": r2(inv_row["avg_soh"]),
         "avgReorderLevel": r2(inv_row["avg_rop"]),
@@ -197,9 +221,8 @@ def build_summary(conn: sqlite3.Connection) -> dict:
         "byCity": risk_by_city,
     }
 
-    record_count = orders
     meta = {
-        "recordCount": record_count,
+        "recordCount": orders,
         "generatedAt": None,
         "columns": [
             "Invoice_ID", "Invoice_Date", "City", "Store_Format", "Category", "Brand",
@@ -229,6 +252,12 @@ def build_summary(conn: sqlite3.Connection) -> dict:
 
 
 def build_insights(summary: dict) -> list[dict]:
+    # A filter combination can legitimately match zero rows (e.g. a city that
+    # sells no Snacks) -- every breakdown below is then empty, so there is
+    # nothing to compare and no insight to generate.
+    if summary["totals"]["orders"] == 0:
+        return []
+
     insights = []
 
     cat_margins = [c["marginPct"] for c in summary["byCategory"]]
@@ -251,16 +280,18 @@ def build_insights(summary: dict) -> list[dict]:
     )
 
     inv = summary["inventory"]
-    worst_stock_cat = inv["byCategory"][0]
+    worst_stock_cat = inv["byCategory"][0] if inv["byCategory"] else None
     insights.append(
         {
             "id": "stockout-risk",
-            "severity": "critical",
+            "severity": "critical" if inv["stockoutRisk"] else "info",
             "title": f"{fmt_in(inv['stockoutRisk'])} orders ({inv['stockoutRiskPct']}%) sit at or below reorder level",
             "description": (
                 f"{worst_stock_cat['category']} is the most exposed category with "
                 f"{worst_stock_cat['atRiskOrders']} at-risk line items. Average lead time is "
                 f"{inv['avgLeadTimeDays']} days, so delayed reorders risk stockouts."
+                if worst_stock_cat
+                else "No line items in this view are at or below their reorder level."
             ),
             "actionLabel": "View at-risk inventory",
             "filter": {"stockRisk": True},
@@ -302,7 +333,7 @@ def build_insights(summary: dict) -> list[dict]:
 
     best_month = max(summary["monthlyTrend"], key=lambda m: m["revenue"])
     worst_month = min(summary["monthlyTrend"], key=lambda m: m["revenue"])
-    swing = r2(((best_month["revenue"] - worst_month["revenue"]) / worst_month["revenue"]) * 100)
+    swing = r2(((best_month["revenue"] - worst_month["revenue"]) / worst_month["revenue"]) * 100) if worst_month["revenue"] else 0.0
     insights.append(
         {
             "id": "seasonality",
@@ -319,7 +350,7 @@ def build_insights(summary: dict) -> list[dict]:
 
     top_city = max(summary["byCity"], key=lambda c: c["revenue"])
     bottom_city = min(summary["byCity"], key=lambda c: c["revenue"])
-    city_spread = r2(((top_city["revenue"] - bottom_city["revenue"]) / bottom_city["revenue"]) * 100)
+    city_spread = r2(((top_city["revenue"] - bottom_city["revenue"]) / bottom_city["revenue"]) * 100) if bottom_city["revenue"] else 0.0
     insights.append(
         {
             "id": "city-balance",
