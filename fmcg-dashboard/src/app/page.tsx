@@ -225,10 +225,6 @@ export default function Home() {
             <ComingSoon label={dept.label} description={dept.description} />
           ) : (
             <>
-              {dept.id === "overview" && (
-                <DepartmentTopLine items={topLineItems} onSelect={setActiveDept} />
-              )}
-
               <FilterPanel
                 filter={filter}
                 onFieldChange={setFilterField}
@@ -241,6 +237,10 @@ export default function Home() {
                 onCustomToChange={setCustomTo}
               />
               <FilterBar filter={filter} onReset={resetFilter} />
+
+              {dept.id === "overview" && (
+                <DepartmentTopLine items={topLineItems} onSelect={setActiveDept} />
+              )}
 
               <section>
                 {dept.id === "overview" && (
