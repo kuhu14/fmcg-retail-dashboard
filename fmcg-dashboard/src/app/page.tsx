@@ -43,9 +43,14 @@ export default function Home() {
 
   const dept = useMemo(() => DEPARTMENTS.find((d) => d.id === activeDept)!, [activeDept]);
   const filter = filtersByDept[activeDept] ?? EMPTY_FILTER;
-  const monthsBack = TIME_RANGES.find((r) => r.id === timeRange)?.monthsBack ?? null;
-  const timeFilter: RecordFilter = monthsBack ? { monthsBack } : EMPTY_FILTER;
-  const effectiveFilter: RecordFilter = monthsBack ? { ...filter, monthsBack } : filter;
+  const activeRange = TIME_RANGES.find((r) => r.id === timeRange)!;
+  const timeFilter: RecordFilter = activeRange.year
+    ? { year: activeRange.year }
+    : activeRange.monthsBack
+      ? { monthsBack: activeRange.monthsBack }
+      : EMPTY_FILTER;
+  const hasTimeFilter = Object.keys(timeFilter).length > 0;
+  const effectiveFilter: RecordFilter = hasTimeFilter ? { ...filter, ...timeFilter } : filter;
 
   const setFilter = useCallback(
     (next: RecordFilter | ((prev: RecordFilter) => RecordFilter)) => {
