@@ -99,6 +99,7 @@ export interface RecordFilter {
   loyalty?: number;
   month?: string;
   monthsBack?: number;
+  year?: number;
   stockRisk?: boolean;
   overstock?: boolean;
   ageMissing?: boolean;

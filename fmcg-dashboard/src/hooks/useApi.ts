@@ -78,6 +78,7 @@ function filterToParams(filter: RecordFilter): Record<string, string | number | 
   if (filter.loyalty !== undefined) params.loyalty = filter.loyalty;
   if (filter.month) params.month = filter.month;
   if (filter.monthsBack !== undefined) params.monthsBack = filter.monthsBack;
+  if (filter.year !== undefined) params.year = filter.year;
   if (filter.stockRisk) params.stockRisk = true;
   if (filter.overstock) params.overstock = true;
   if (filter.ageMissing) params.ageMissing = true;
