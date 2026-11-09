@@ -1,24 +1,31 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Insight, RecordFilter } from "@/lib/types";
 import { useSummary } from "@/hooks/useApi";
 import { API_BASE_URL } from "@/lib/api";
-import { KpiCards } from "@/components/KpiCards";
+import { DEPARTMENTS, type DepartmentId } from "@/lib/departments";
+import { Kpi } from "@/components/KpiCards";
 import { InsightCards } from "@/components/InsightCards";
 import { DataSourceInfo } from "@/components/DataSourceInfo";
 import { DrillDownTable } from "@/components/DrillDownTable";
 import { Card } from "@/components/Card";
+import { ComingSoon } from "@/components/ComingSoon";
+import { Sidebar } from "@/components/Sidebar";
 import { RevenueBarChart } from "@/components/charts/RevenueBarChart";
 import { MixDonutChart } from "@/components/charts/MixDonutChart";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { InventoryRiskChart } from "@/components/charts/InventoryRiskChart";
+import { formatINR, formatNumber, formatPct } from "@/lib/format";
 
 export default function Home() {
   const { summary: data, loading, error } = useSummary();
   const [filter, setFilter] = useState<RecordFilter>({});
   const [activeInsightId, setActiveInsightId] = useState<string | null>(null);
+  const [activeDept, setActiveDept] = useState<DepartmentId>("overview");
   const tableRef = useRef<HTMLDivElement>(null);
+
+  const dept = useMemo(() => DEPARTMENTS.find((d) => d.id === activeDept)!, [activeDept]);
 
   function applyInsight(insight: Insight) {
     setFilter(insight.filter);
@@ -68,112 +75,297 @@ export default function Home() {
     );
   }
 
+  const insights = dept.insightIds
+    ? data.insights.filter((i) => dept.insightIds!.includes(i.id))
+    : data.insights;
+
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-[var(--card-border)] sticky top-0 z-10 backdrop-blur bg-[var(--background)]/85">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-lg font-semibold text-[var(--foreground)]">
-              FMCG Retail Sales &amp; Inventory Dashboard
-            </h1>
-            <p className="text-xs text-[var(--chart-muted)]">
-              India · Calendar Year 2024 · {data.meta.recordCount.toLocaleString("en-IN")} transactions across 8 cities
-            </p>
+    <div className="min-h-screen md:flex">
+      <Sidebar activeId={activeDept} onSelect={setActiveDept} />
+
+      <div className="flex-1 min-w-0">
+        <header className="border-b border-[var(--card-border)] sticky top-0 z-10 backdrop-blur bg-[var(--background)]/85">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+            <div>
+              <h1 className="text-lg font-semibold text-[var(--foreground)]">{dept.label}</h1>
+              <p className="text-xs text-[var(--chart-muted)]">
+                {dept.id === "overview"
+                  ? `India · Calendar Year 2024 · ${data.meta.recordCount.toLocaleString("en-IN")} transactions across 8 cities`
+                  : dept.description}
+              </p>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
-        <section>
-          <KpiCards summary={data} />
-        </section>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
+          {dept.comingSoon ? (
+            <ComingSoon label={dept.label} description={dept.description} />
+          ) : (
+            <>
+              <section>
+                {dept.id === "overview" && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <Kpi
+                      label="Total Revenue"
+                      value={formatINR(data.totals.revenue, { compact: true })}
+                      sub={`${formatNumber(data.totals.orders)} orders`}
+                    />
+                    <Kpi
+                      label="Gross Margin"
+                      value={formatPct(data.totals.marginPct, 2)}
+                      sub={formatINR(data.totals.margin, { compact: true })}
+                    />
+                    <Kpi
+                      label="Avg Order Value"
+                      value={formatINR(data.totals.avgOrderValue)}
+                      sub={`${formatNumber(data.totals.units)} units sold`}
+                    />
+                    <Kpi
+                      label="Loyalty Members"
+                      value={formatPct(data.totals.loyaltyPct)}
+                      sub={`${formatNumber(data.totals.loyaltyCount)} of ${formatNumber(data.totals.orders)}`}
+                    />
+                    <Kpi
+                      label="Stockout Risk"
+                      value={formatNumber(data.inventory.stockoutRisk)}
+                      sub={`${formatPct(data.inventory.stockoutRiskPct)} of line items`}
+                    />
+                    <Kpi
+                      label="Overstocked"
+                      value={formatPct(data.inventory.overstockPct)}
+                      sub={`avg lead time ${data.inventory.avgLeadTimeDays}d`}
+                    />
+                  </div>
+                )}
 
-        <section>
-          <h2 className="text-sm font-semibold text-[var(--foreground)] mb-3">
-            Actionable insights
-          </h2>
-          <InsightCards
-            insights={data.insights}
-            activeInsightId={activeInsightId}
-            onApply={applyInsight}
-          />
-        </section>
+                {dept.id === "finance" && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <Kpi
+                      label="Total Revenue"
+                      value={formatINR(data.totals.revenue, { compact: true })}
+                      sub={`${formatNumber(data.totals.orders)} orders`}
+                    />
+                    <Kpi
+                      label="Total Cost"
+                      value={formatINR(data.totals.cost, { compact: true })}
+                    />
+                    <Kpi
+                      label="Gross Margin"
+                      value={formatPct(data.totals.marginPct, 2)}
+                      sub={formatINR(data.totals.margin, { compact: true })}
+                    />
+                    <Kpi label="Avg Order Value" value={formatINR(data.totals.avgOrderValue)} />
+                  </div>
+                )}
 
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card title="Revenue by category" subtitle="Click a bar to filter the table below">
-            <RevenueBarChart
-              dimension="category"
-              data={data.byCategory.map((c) => ({
-                name: c.category,
-                revenue: c.revenue,
-                marginPct: c.marginPct,
-                orders: c.orders,
-              }))}
-              activeName={filter.category ?? null}
-              onBarClick={(name) => applyChartFilter({ category: name })}
-            />
-          </Card>
-          <Card title="Revenue by city" subtitle="Click a bar to filter the table below">
-            <RevenueBarChart
-              dimension="city"
-              data={data.byCity.map((c) => ({
-                name: c.city,
-                revenue: c.revenue,
-                marginPct: c.marginPct,
-                orders: c.orders,
-              }))}
-              activeName={filter.city ?? null}
-              onBarClick={(name) => applyChartFilter({ city: name })}
-            />
-          </Card>
-          <Card title="Monthly revenue trend" subtitle="2024 · click a point to jump to that month">
-            <TrendChart
-              data={data.monthlyTrend}
-              activeMonth={filter.month ?? null}
-              onPointClick={(month) => applyChartFilter({ month })}
-            />
-          </Card>
-          <Card title="Inventory risk by category" subtitle="Line items at or below reorder level">
-            <InventoryRiskChart
-              data={data.inventory.byCategory.map((c) => ({ name: c.category, atRiskOrders: c.atRiskOrders }))}
-              activeName={filter.category ?? null}
-              onBarClick={(name) => applyChartFilter({ category: name })}
-            />
-          </Card>
-          <Card title="Channel mix" subtitle="Share of revenue">
-            <MixDonutChart
-              dimension="channel"
-              data={data.byChannel.map((c) => ({ name: c.channel, revenue: c.revenue, orders: c.orders }))}
-              activeName={filter.channel ?? null}
-              onSliceClick={(name) => applyChartFilter({ channel: name })}
-            />
-          </Card>
-          <Card title="Payment mode mix" subtitle="Share of revenue">
-            <MixDonutChart
-              dimension="paymentMode"
-              data={data.byPaymentMode.map((c) => ({ name: c.paymentMode, revenue: c.revenue, orders: c.orders }))}
-              activeName={filter.paymentMode ?? null}
-              onSliceClick={(name) => applyChartFilter({ paymentMode: name })}
-            />
-          </Card>
-        </section>
+                {dept.id === "sales" && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <Kpi
+                      label="Total Revenue"
+                      value={formatINR(data.totals.revenue, { compact: true })}
+                    />
+                    <Kpi label="Orders" value={formatNumber(data.totals.orders)} />
+                    <Kpi label="Units Sold" value={formatNumber(data.totals.units)} />
+                    <Kpi label="Avg Order Value" value={formatINR(data.totals.avgOrderValue)} />
+                  </div>
+                )}
 
-        <section ref={tableRef}>
-          <DrillDownTable
-            totalRecords={data.meta.recordCount}
-            filter={filter}
-            onFilterChange={setFilter}
-          />
-        </section>
+                {dept.id === "supply-chain" && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <Kpi
+                      label="Stockout Risk"
+                      value={formatNumber(data.inventory.stockoutRisk)}
+                      sub={`${formatPct(data.inventory.stockoutRiskPct)} of line items`}
+                    />
+                    <Kpi
+                      label="Critical Stock"
+                      value={formatNumber(data.inventory.criticalStock)}
+                      sub="below half of reorder level"
+                    />
+                    <Kpi
+                      label="Overstocked"
+                      value={formatPct(data.inventory.overstockPct)}
+                      sub={formatNumber(data.inventory.overstock)}
+                    />
+                    <Kpi
+                      label="Avg Lead Time"
+                      value={`${data.inventory.avgLeadTimeDays}d`}
+                    />
+                  </div>
+                )}
 
-        <section>
-          <DataSourceInfo summary={data} />
-        </section>
+                {dept.id === "customer" && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <Kpi
+                      label="Loyalty Members"
+                      value={formatPct(data.totals.loyaltyPct)}
+                      sub={`${formatNumber(data.totals.loyaltyCount)} of ${formatNumber(data.totals.orders)}`}
+                    />
+                    <Kpi
+                      label="Avg Order Value (Loyalty)"
+                      value={formatINR(
+                        data.byLoyalty.find((l) => l.loyalty === 1)?.avgOrderValue ?? 0
+                      )}
+                    />
+                    <Kpi
+                      label="Avg Order Value (Non-loyalty)"
+                      value={formatINR(
+                        data.byLoyalty.find((l) => l.loyalty === 0)?.avgOrderValue ?? 0
+                      )}
+                    />
+                    <Kpi
+                      label="Age Missing"
+                      value={formatPct(data.totals.ageMissingPct)}
+                      sub={`${formatNumber(data.totals.ageMissing)} orders`}
+                    />
+                  </div>
+                )}
+              </section>
 
-        <footer className="text-center text-[11px] text-[var(--chart-muted)] py-4">
-          Built with Next.js client components · Served live by FastAPI + SQLite ({API_BASE_URL})
-        </footer>
-      </main>
+              <section>
+                <h2 className="text-sm font-semibold text-[var(--foreground)] mb-3">
+                  Actionable insights
+                </h2>
+                <InsightCards
+                  insights={insights}
+                  activeInsightId={activeInsightId}
+                  onApply={applyInsight}
+                />
+              </section>
+
+              <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {(dept.id === "overview" || dept.id === "sales") && (
+                  <Card title="Revenue by category" subtitle="Click a bar to filter the table below">
+                    <RevenueBarChart
+                      dimension="category"
+                      data={data.byCategory.map((c) => ({
+                        name: c.category,
+                        revenue: c.revenue,
+                        marginPct: c.marginPct,
+                        orders: c.orders,
+                      }))}
+                      activeName={filter.category ?? null}
+                      onBarClick={(name) => applyChartFilter({ category: name })}
+                    />
+                  </Card>
+                )}
+
+                {(dept.id === "overview" || dept.id === "sales") && (
+                  <Card title="Revenue by city" subtitle="Click a bar to filter the table below">
+                    <RevenueBarChart
+                      dimension="city"
+                      data={data.byCity.map((c) => ({
+                        name: c.city,
+                        revenue: c.revenue,
+                        marginPct: c.marginPct,
+                        orders: c.orders,
+                      }))}
+                      activeName={filter.city ?? null}
+                      onBarClick={(name) => applyChartFilter({ city: name })}
+                    />
+                  </Card>
+                )}
+
+                {(dept.id === "overview" || dept.id === "sales" || dept.id === "finance") && (
+                  <Card title="Monthly revenue trend" subtitle="2024 · click a point to jump to that month">
+                    <TrendChart
+                      data={data.monthlyTrend}
+                      activeMonth={filter.month ?? null}
+                      onPointClick={(month) => applyChartFilter({ month })}
+                    />
+                  </Card>
+                )}
+
+                {(dept.id === "overview" || dept.id === "supply-chain") && (
+                  <Card title="Inventory risk by category" subtitle="Line items at or below reorder level">
+                    <InventoryRiskChart
+                      data={data.inventory.byCategory.map((c) => ({ name: c.category, atRiskOrders: c.atRiskOrders }))}
+                      activeName={filter.category ?? null}
+                      onBarClick={(name) => applyChartFilter({ category: name })}
+                    />
+                  </Card>
+                )}
+
+                {dept.id === "supply-chain" && (
+                  <Card title="Inventory risk by city" subtitle="Line items at or below reorder level">
+                    <InventoryRiskChart
+                      data={data.inventory.byCity.map((c) => ({ name: c.city, atRiskOrders: c.atRiskOrders }))}
+                      activeName={filter.city ?? null}
+                      onBarClick={(name) => applyChartFilter({ city: name })}
+                    />
+                  </Card>
+                )}
+
+                {(dept.id === "overview" || dept.id === "sales") && (
+                  <Card title="Channel mix" subtitle="Share of revenue">
+                    <MixDonutChart
+                      dimension="channel"
+                      data={data.byChannel.map((c) => ({ name: c.channel, revenue: c.revenue, orders: c.orders }))}
+                      activeName={filter.channel ?? null}
+                      onSliceClick={(name) => applyChartFilter({ channel: name })}
+                    />
+                  </Card>
+                )}
+
+                {(dept.id === "overview" || dept.id === "finance") && (
+                  <Card title="Payment mode mix" subtitle="Share of revenue">
+                    <MixDonutChart
+                      dimension="paymentMode"
+                      data={data.byPaymentMode.map((c) => ({ name: c.paymentMode, revenue: c.revenue, orders: c.orders }))}
+                      activeName={filter.paymentMode ?? null}
+                      onSliceClick={(name) => applyChartFilter({ paymentMode: name })}
+                    />
+                  </Card>
+                )}
+
+                {dept.id === "customer" && (
+                  <Card title="Revenue by gender" subtitle="Share of revenue">
+                    <MixDonutChart
+                      dimension="gender"
+                      data={data.byGender.map((g) => ({ name: g.gender, revenue: g.revenue, orders: g.orders }))}
+                      activeName={filter.gender ?? null}
+                      onSliceClick={(name) => applyChartFilter({ gender: name })}
+                    />
+                  </Card>
+                )}
+
+                {dept.id === "customer" && (
+                  <Card title="Loyalty mix" subtitle="Share of revenue">
+                    <MixDonutChart
+                      dimension="loyalty"
+                      data={data.byLoyalty.map((l) => ({
+                        name: l.loyalty === 1 ? "Loyalty members" : "Non-loyalty",
+                        revenue: l.revenue,
+                        orders: l.orders,
+                      }))}
+                      activeName={filter.loyalty === undefined ? null : filter.loyalty === 1 ? "Loyalty members" : "Non-loyalty"}
+                      onSliceClick={(name) => applyChartFilter({ loyalty: name === "Loyalty members" ? 1 : 0 })}
+                    />
+                  </Card>
+                )}
+              </section>
+
+              <section ref={tableRef}>
+                <DrillDownTable
+                  totalRecords={data.meta.recordCount}
+                  filter={filter}
+                  onFilterChange={setFilter}
+                />
+              </section>
+
+              {dept.id === "overview" && (
+                <section>
+                  <DataSourceInfo summary={data} />
+                </section>
+              )}
+            </>
+          )}
+
+          <footer className="text-center text-[11px] text-[var(--chart-muted)] py-4">
+            Built with Next.js client components · Served live by FastAPI + SQLite ({API_BASE_URL})
+          </footer>
+        </main>
+      </div>
     </div>
   );
 }

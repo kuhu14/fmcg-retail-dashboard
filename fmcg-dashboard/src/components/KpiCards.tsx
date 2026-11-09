@@ -2,7 +2,7 @@ import type { Summary } from "@/lib/types";
 import { formatINR, formatNumber, formatPct } from "@/lib/format";
 import { Card } from "./Card";
 
-function Kpi({ label, value, sub }: { label: string; value: string; sub?: string }) {
+export function Kpi({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <Card className="flex flex-col gap-1">
       <span className="text-xs font-medium text-[var(--chart-muted)] uppercase tracking-wide">
