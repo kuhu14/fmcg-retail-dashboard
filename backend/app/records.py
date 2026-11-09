@@ -60,6 +60,14 @@ def build_where(filters: dict) -> tuple[str, list]:
         clauses.append("substr(invoice_date, 1, 4) = ?")
         params.append(str(filters["year"]))
 
+    if filters.get("dateFrom"):
+        clauses.append("substr(invoice_date, 1, 10) >= ?")
+        params.append(filters["dateFrom"])
+
+    if filters.get("dateTo"):
+        clauses.append("substr(invoice_date, 1, 10) <= ?")
+        params.append(filters["dateTo"])
+
     if filters.get("stockRisk"):
         clauses.append("stock_on_hand <= reorder_level")
 

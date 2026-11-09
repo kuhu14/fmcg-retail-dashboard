@@ -100,6 +100,8 @@ export interface RecordFilter {
   month?: string;
   monthsBack?: number;
   year?: number;
+  dateFrom?: string;
+  dateTo?: string;
   stockRisk?: boolean;
   overstock?: boolean;
   ageMissing?: boolean;
