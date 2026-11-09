@@ -101,6 +101,7 @@ export function FilterPanel({
               value={filter.month ?? ""}
               onChange={(v) => onFieldChange("month", v)}
               options={data.monthlyTrend.map((m) => ({ value: m.month, label: monthLabel(m.month) }))}
+              sort={false}
             />
           )}
         </FilterGroup>
