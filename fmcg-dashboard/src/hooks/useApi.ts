@@ -42,15 +42,17 @@ export function useSummary(filter: RecordFilter = {}) {
 }
 
 // The drill-down table shows "N of TOTAL records match" -- TOTAL must stay
-// the whole dataset's size regardless of any active department filter, so
-// it's fetched once, unfiltered, rather than derived from a filtered summary.
-export function useGlobalRecordCount() {
+// unaffected by any department's dimension filter (category, city, ...), so
+// it's fetched separately rather than derived from the filtered summary.
+// It still respects the global time-range toggle, since that changes what
+// "the whole dataset" means for every department at once.
+export function useGlobalRecordCount(timeFilter: RecordFilter = {}) {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     api
-      .get<Summary>("/api/summary")
+      .get<Summary>("/api/summary", { params: summaryParams(timeFilter) })
       .then((res) => {
         if (!cancelled) setCount(res.data.meta.recordCount);
       })
@@ -58,7 +60,8 @@ export function useGlobalRecordCount() {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(timeFilter)]);
 
   return count;
 }
@@ -74,6 +77,7 @@ function filterToParams(filter: RecordFilter): Record<string, string | number | 
   if (filter.gender) params.gender = filter.gender;
   if (filter.loyalty !== undefined) params.loyalty = filter.loyalty;
   if (filter.month) params.month = filter.month;
+  if (filter.monthsBack !== undefined) params.monthsBack = filter.monthsBack;
   if (filter.stockRisk) params.stockRisk = true;
   if (filter.overstock) params.overstock = true;
   if (filter.ageMissing) params.ageMissing = true;

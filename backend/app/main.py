@@ -37,6 +37,25 @@ async def add_cache_headers(request: Request, call_next):
     return response
 
 
+@lru_cache(maxsize=4)
+def _latest_month(version: float) -> str:
+    row = get_db().execute("SELECT MAX(substr(invoice_date, 1, 7)) AS m FROM sales").fetchone()
+    return row["m"]
+
+
+def _resolve_since_month(months_back: int | None) -> str | None:
+    """Turns 'last N months' into a concrete 'YYYY-MM' cutoff, anchored to the
+    dataset's own latest month rather than today's date (this is historical
+    data, not a live feed) -- so it stays correct regardless of which other
+    filters are also active."""
+    if months_back is None:
+        return None
+    year, month = (int(x) for x in _latest_month(db_version()).split("-"))
+    total = year * 12 + (month - 1) - (months_back - 1)
+    cutoff_year, cutoff_month = divmod(total, 12)
+    return f"{cutoff_year:04d}-{cutoff_month + 1:02d}"
+
+
 def record_filters(
     city: str | None = None,
     category: str | None = None,
@@ -47,6 +66,7 @@ def record_filters(
     gender: str | None = None,
     loyalty: int | None = Query(default=None, ge=0, le=1),
     month: str | None = None,
+    monthsBack: int | None = Query(default=None, ge=1, le=12),
     stockRisk: bool | None = None,
     overstock: bool | None = None,
     ageMissing: bool | None = None,
@@ -62,6 +82,7 @@ def record_filters(
         "gender": gender,
         "loyalty": loyalty,
         "month": month,
+        "sinceMonth": _resolve_since_month(monthsBack),
         "stockRisk": stockRisk,
         "overstock": overstock,
         "ageMissing": ageMissing,

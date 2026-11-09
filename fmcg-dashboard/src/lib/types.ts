@@ -98,6 +98,7 @@ export interface RecordFilter {
   gender?: string;
   loyalty?: number;
   month?: string;
+  monthsBack?: number;
   stockRisk?: boolean;
   overstock?: boolean;
   ageMissing?: boolean;

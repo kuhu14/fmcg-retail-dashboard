@@ -14,12 +14,14 @@ import { ComingSoon } from "@/components/ComingSoon";
 import { FilterBar } from "@/components/FilterBar";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TimeRangeToggle } from "@/components/TimeRangeToggle";
 import { RevenueBarChart } from "@/components/charts/RevenueBarChart";
 import { MixDonutChart } from "@/components/charts/MixDonutChart";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { InventoryRiskChart } from "@/components/charts/InventoryRiskChart";
 import { formatINR, formatNumber, formatPct } from "@/lib/format";
 import { monthlyTrendDirection } from "@/lib/trend";
+import { TIME_RANGES, type TimeRangeId } from "@/lib/timeRange";
 
 const EMPTY_FILTER: RecordFilter = {};
 
@@ -33,10 +35,17 @@ export default function Home() {
   // touches what Sales or Overview are showing, and switching tabs doesn't
   // carry a filter over to an unrelated department.
   const [filtersByDept, setFiltersByDept] = useState<Partial<Record<DepartmentId, RecordFilter>>>({});
+  // One toggle for the whole dashboard (not per-department, unlike the bar/
+  // insight filters above) -- it narrows what every department means by
+  // "the data" at once.
+  const [timeRange, setTimeRange] = useState<TimeRangeId>("12m");
   const tableRef = useRef<HTMLDivElement>(null);
 
   const dept = useMemo(() => DEPARTMENTS.find((d) => d.id === activeDept)!, [activeDept]);
   const filter = filtersByDept[activeDept] ?? EMPTY_FILTER;
+  const monthsBack = TIME_RANGES.find((r) => r.id === timeRange)?.monthsBack ?? null;
+  const timeFilter: RecordFilter = monthsBack ? { monthsBack } : EMPTY_FILTER;
+  const effectiveFilter: RecordFilter = monthsBack ? { ...filter, monthsBack } : filter;
 
   const setFilter = useCallback(
     (next: RecordFilter | ((prev: RecordFilter) => RecordFilter)) => {
@@ -49,8 +58,8 @@ export default function Home() {
     [activeDept]
   );
 
-  const { summary: data, loading, error } = useSummary(filter);
-  const globalRecordCount = useGlobalRecordCount();
+  const { summary: data, loading, error } = useSummary(effectiveFilter);
+  const globalRecordCount = useGlobalRecordCount(timeFilter);
 
   function applyInsight(insight: Insight) {
     setFilter((prev) => (sameFilter(prev, insight.filter) ? EMPTY_FILTER : insight.filter));
@@ -106,7 +115,8 @@ export default function Home() {
     ? data.insights.filter((i) => dept.insightIds!.includes(i.id))
     : data.insights;
   const activeInsightId = insights.find((i) => sameFilter(i.filter, filter))?.id ?? null;
-  const hasActiveFilter = Object.keys(filter).some((k) => k !== "search" && filter[k as keyof RecordFilter] !== undefined);
+  const hasDimensionFilter = Object.keys(filter).some((k) => k !== "search" && filter[k as keyof RecordFilter] !== undefined);
+  const hasActiveFilter = hasDimensionFilter || monthsBack !== null;
   const trendOf = (key: Parameters<typeof monthlyTrendDirection>[1]) =>
     monthlyTrendDirection(data.monthlyTrend, key);
 
@@ -127,7 +137,10 @@ export default function Home() {
                     : dept.description}
               </p>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <TimeRangeToggle value={timeRange} onChange={setTimeRange} />
+              <ThemeToggle />
+            </div>
           </div>
         </header>
 
@@ -412,6 +425,7 @@ export default function Home() {
                   totalRecords={globalRecordCount ?? data.meta.recordCount}
                   filter={filter}
                   onFilterChange={setFilter}
+                  extraFilter={timeFilter}
                 />
               </section>
 

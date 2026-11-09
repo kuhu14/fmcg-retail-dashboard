@@ -16,24 +16,33 @@ export function DrillDownTable({
   totalRecords,
   filter,
   onFilterChange,
+  extraFilter,
 }: {
   totalRecords: number;
   filter: RecordFilter;
   onFilterChange: (filter: RecordFilter) => void;
+  /** Filter fields (currently just the global time-range toggle) that affect
+   * what rows are fetched but aren't part of this department's own filter --
+   * they never show up as a removable chip here and never get persisted
+   * into `filter` via onFilterChange. */
+  extraFilter?: RecordFilter;
 }) {
   const [pageIndex, setPageIndex] = useState(0);
   const [sortBy, setSortBy] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [searchInput, setSearchInput] = useState(filter.search ?? "");
 
-  // Keep the search box in sync when a chart/insight click replaces the
-  // filter externally (e.g. clearing a previous search), and reset paging.
+  const queryFilter: RecordFilter = { ...filter, ...extraFilter };
+  const queryKey = JSON.stringify(queryFilter);
+
+  // Keep the search box in sync when a chart/insight click (or the global
+  // time-range toggle) replaces the filter externally, and reset paging.
   // Adjusting state during render (React's documented pattern for "reset
   // state when a prop changes") rather than in an effect, since it applies
   // before paint with no extra render or setState-in-effect cascade.
-  const [prevFilter, setPrevFilter] = useState(filter);
-  if (filter !== prevFilter) {
-    setPrevFilter(filter);
+  const [prevQueryKey, setPrevQueryKey] = useState(queryKey);
+  if (queryKey !== prevQueryKey) {
+    setPrevQueryKey(queryKey);
     setSearchInput(filter.search ?? "");
     setPageIndex(0);
   }
@@ -50,7 +59,7 @@ export function DrillDownTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
 
-  const { rows, total, loading } = useRecords(filter, pageIndex, PAGE_SIZE, sortBy, sortDir);
+  const { rows, total, loading } = useRecords(queryFilter, pageIndex, PAGE_SIZE, sortBy, sortDir);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function toggleSort(key: SortKey) {
@@ -71,7 +80,7 @@ export function DrillDownTable({
   }
 
   function exportCsv() {
-    const url = exportRecordsUrl(filter);
+    const url = exportRecordsUrl(queryFilter);
     const a = document.createElement("a");
     a.href = url;
     a.click();
