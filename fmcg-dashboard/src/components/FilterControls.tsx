@@ -4,11 +4,11 @@ import type { ReactNode } from "react";
 
 export function FilterGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--chart-muted)]">
+    <div className="flex flex-shrink-0 flex-col gap-1">
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--chart-muted)] whitespace-nowrap">
         {label}
       </span>
-      <div className="flex flex-wrap items-center gap-1.5">{children}</div>
+      <div className="flex flex-nowrap items-center gap-1.5">{children}</div>
     </div>
   );
 }
@@ -34,7 +34,7 @@ export function FilterSelect({
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="text-xs rounded-md border border-[var(--card-border)] bg-[var(--background)] px-2 py-1.5 text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[110px]"
+      className="text-xs rounded-md border border-[var(--card-border)] bg-[var(--background)] px-2 py-1.5 text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[88px] flex-shrink"
     >
       <option value="">All {label}</option>
       {shown.map((o) => (

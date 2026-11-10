@@ -79,7 +79,7 @@ export function InternationalDashboard() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--chart-surface)] p-3">
-        <div className="flex flex-wrap items-start gap-x-5 gap-y-3">
+        <div className="flex flex-nowrap items-start gap-x-5 overflow-x-auto pb-1">
           <FilterGroup label="Geography">
             <FilterSelect
               label="Countries"
@@ -114,7 +114,7 @@ export function InternationalDashboard() {
           </FilterGroup>
 
           <FilterGroup label="Time">
-            <div className="flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--background)] p-0.5">
+            <div className="flex flex-shrink-0 items-center rounded-lg border border-[var(--card-border)] bg-[var(--background)] p-0.5">
               {[
                 { label: "Last Year (2025)", year: 2025 },
                 { label: "Present Year (2026)", year: 2026 },
@@ -160,7 +160,7 @@ export function InternationalDashboard() {
             <button
               type="button"
               onClick={() => setFilter(EMPTY_FILTER)}
-              className="ml-auto text-xs font-medium rounded-md border border-[var(--card-border)] px-2.5 py-1.5 text-[var(--foreground)] hover:bg-[var(--chart-gridline)]/40"
+              className="ml-auto flex-shrink-0 text-xs font-medium rounded-md border border-[var(--card-border)] px-2.5 py-1.5 text-[var(--foreground)] hover:bg-[var(--chart-gridline)]/40"
             >
               Reset
             </button>

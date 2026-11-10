@@ -10,7 +10,7 @@ export function TimeRangeToggle({
   onChange: (id: TimeRangeId) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-y-1 rounded-lg border border-[var(--card-border)] bg-[var(--chart-surface)] p-0.5">
+    <div className="flex flex-nowrap flex-shrink-0 items-center rounded-lg border border-[var(--card-border)] bg-[var(--chart-surface)] p-0.5">
       {TIME_RANGES.map((range) => {
         const active = range.id === value;
         return (
