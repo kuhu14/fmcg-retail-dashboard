@@ -1,7 +1,5 @@
 "use client";
 
-import { api } from "@/lib/api";
-
 export interface HrRole {
   id: string;
   title: string;
@@ -219,15 +217,103 @@ export function useHrRoster() {
   return { roster: ROSTER, loading: false, error: null as string | null };
 }
 
-export async function askHiringAssistant(question: string): Promise<string> {
-  try {
-    const res = await api.post<{ answer: string }>("/api/hr/ask", { question });
-    return res.data.answer;
-  } catch (err: unknown) {
-    const message =
-      (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
-      (err as Error)?.message ??
-      "Something went wrong asking the hiring assistant.";
-    throw new Error(message);
+const DEPARTMENTS = [
+  "Supply Chain",
+  "Customer & Marketing",
+  "Finance",
+  "International / Exports",
+  "Sales & Channel",
+];
+
+function matchDepartment(question: string): string | null {
+  const q = question.toLowerCase();
+  if (q.includes("export")) return "International / Exports";
+  if (q.includes("marketing")) return "Customer & Marketing";
+  return DEPARTMENTS.find((d) => q.includes(d.toLowerCase())) ?? null;
+}
+
+function matchRole(question: string): HrRole | null {
+  const q = question.toLowerCase();
+  return (
+    OPEN_ROLES.find((r) => q.includes(r.title.toLowerCase())) ??
+    OPEN_ROLES.find((r) => r.title.toLowerCase().split(" ").filter((w) => w.length > 4).some((w) => q.includes(w))) ??
+    null
+  );
+}
+
+function candidatesFor(roleId: string): HrCandidate[] {
+  return CANDIDATES.filter((c) => c.appliedRole === roleId).sort((a, b) => b.interviewScore - a.interviewScore);
+}
+
+function describeCandidate(c: HrCandidate, role: HrRole): string {
+  const matchedSkills = c.skills.filter((s) => role.mustHaveSkills.includes(s));
+  const skillsLine = matchedSkills.length ? matchedSkills.join(", ") : c.skills.slice(0, 2).join(", ");
+  return `${c.name} (${c.currentTitle}, ${c.yearsExperience} yrs) — interview score ${c.interviewScore}/5, strong on ${skillsLine}. ${c.notes}`;
+}
+
+function answerRoleHire(role: HrRole, question: string): string {
+  const candidates = candidatesFor(role.id);
+  const compare = question.toLowerCase().includes("compare");
+  if (candidates.length === 0) {
+    return `No one has applied for ${role.title} yet. Keep the req open in ${role.location} and widen sourcing toward ${role.mustHaveSkills.join(", ")}.`;
   }
+  if (compare && candidates.length >= 2) {
+    const [a, b] = candidates;
+    return [
+      `${a.name} vs ${b.name} for ${role.title}:`,
+      `• ${describeCandidate(a, role)}`,
+      `• ${describeCandidate(b, role)}`,
+      `Recommendation: ${a.name} — higher interview score and closer match on ${role.mustHaveSkills.join(", ")}.`,
+    ].join("\n");
+  }
+  const [top, runnerUp] = candidates;
+  const lines = [`Hire ${top.name} for ${role.title}.`, `• ${describeCandidate(top, role)}`];
+  if (runnerUp) {
+    lines.push(`Risk/backup: ${runnerUp.name} is a fallback but scored lower (${runnerUp.interviewScore}/5) — ${runnerUp.notes}`);
+  }
+  return lines.join("\n");
+}
+
+function answerPromotion(question: string): string {
+  const department = matchDepartment(question);
+  const pool = EMPLOYEES.filter((e) => (department ? e.department === department : true) && e.readyForPromotion);
+  if (department) {
+    if (pool.length === 0) {
+      const notReady = EMPLOYEES.filter((e) => e.department === department);
+      return notReady.length
+        ? `No one in ${department} is flagged ready for promotion right now. ${notReady
+            .map((e) => `${e.name} (${e.currentTitle}) — ${e.notes}`)
+            .join(" ")}`
+        : `No employees on record in ${department} yet.`;
+    }
+    return pool
+      .map((e) => `${e.name}, ${e.currentTitle} (${e.tenureYears} yrs, ${e.performanceRating}) — ${e.notes}`)
+      .join("\n");
+  }
+  if (pool.length === 0) return "No employees are currently flagged as ready for promotion.";
+  const top = [...pool].sort((a, b) => b.tenureYears - a.tenureYears)[0];
+  return `${top.name} is the strongest promotion case right now — ${top.currentTitle} in ${top.department}, ${top.tenureYears} years tenure, rated "${top.performanceRating}". ${top.notes}`;
+}
+
+function answerGeneral(roster: HrRoster): string {
+  const promoReady = roster.employees.filter((e) => e.readyForPromotion).length;
+  return `We currently have ${roster.openRoles.length} open roles, ${roster.candidates.length} candidates in the pipeline, and ${promoReady} employees ready for promotion. Ask about a specific role (e.g. "Store Operations Manager") or a department (e.g. "promotion in Finance") for a detailed read.`;
+}
+
+function generateHrAnswer(question: string): string {
+  const q = question.toLowerCase();
+  const role = matchRole(question);
+  if (role) return answerRoleHire(role, question);
+  if (q.includes("promot")) return answerPromotion(question);
+  return answerGeneral(ROSTER);
+}
+
+// Reasons locally over the roster above rather than calling a backend --
+// keeps the assistant working regardless of backend deploy state, and every
+// answer stays grounded in the same open roles/candidates/employees data.
+export async function askHiringAssistant(question: string): Promise<string> {
+  const trimmed = (question || "").trim();
+  if (!trimmed) throw new Error("Question cannot be empty.");
+  await new Promise((resolve) => setTimeout(resolve, 350));
+  return generateHrAnswer(trimmed);
 }
