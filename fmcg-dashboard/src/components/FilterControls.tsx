@@ -34,9 +34,9 @@ export function FilterSelect({
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="text-xs rounded-md border border-[var(--card-border)] bg-[var(--background)] px-2 py-1.5 text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[88px] flex-shrink"
+      className="text-xs rounded-md border border-[var(--card-border)] bg-[var(--background)] px-1.5 py-1.5 text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[68px] flex-shrink"
     >
-      <option value="">All {label}</option>
+      <option value="">{label}</option>
       {shown.map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}
