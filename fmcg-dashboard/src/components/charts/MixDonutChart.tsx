@@ -73,17 +73,26 @@ export function MixDonutChart({
           </Pie>
         </PieChart>
       </ResponsiveContainer>
-      <ul className="flex flex-col gap-1.5 text-xs flex-1 min-w-0">
+      <ul className="flex flex-col gap-0.5 text-xs flex-1 min-w-0">
         {data.map((d) => (
-          <li key={d.name} className="flex items-center gap-2 min-w-0">
-            <span
-              className="w-2.5 h-2.5 rounded-full shrink-0"
-              style={{ background: colorScale.get(d.name) }}
-            />
-            <span className="truncate text-[var(--foreground)]">{d.name}</span>
-            <span className="ml-auto tabular-nums text-[var(--chart-muted)]">
-              {formatPct((d.revenue / total) * 100)}
-            </span>
+          <li key={d.name}>
+            <button
+              type="button"
+              disabled={!onSliceClick}
+              onClick={() => onSliceClick?.(d.name)}
+              className={`flex items-center gap-2 min-w-0 w-full rounded px-1 py-1 -mx-1 text-left transition-opacity ${
+                onSliceClick ? "cursor-pointer hover:bg-[var(--chart-gridline)]/40" : ""
+              } ${activeName && activeName !== d.name ? "opacity-35" : ""}`}
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ background: colorScale.get(d.name) }}
+              />
+              <span className="truncate text-[var(--foreground)]">{d.name}</span>
+              <span className="ml-auto tabular-nums text-[var(--chart-muted)]">
+                {formatPct((d.revenue / total) * 100)}
+              </span>
+            </button>
           </li>
         ))}
       </ul>
