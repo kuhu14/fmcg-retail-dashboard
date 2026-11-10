@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
 export interface HrRole {
@@ -43,26 +42,181 @@ export interface HrRoster {
   employees: HrEmployee[];
 }
 
+const OPEN_ROLES: HrRole[] = [
+  {
+    id: "role-store-ops-mgr",
+    title: "Store Operations Manager",
+    department: "Supply Chain",
+    location: "Mumbai",
+    level: "Manager",
+    mustHaveSkills: ["inventory planning", "team leadership", "retail ops"],
+  },
+  {
+    id: "role-trade-marketing-lead",
+    title: "Trade Marketing Lead",
+    department: "Customer & Marketing",
+    location: "Bengaluru",
+    level: "Lead",
+    mustHaveSkills: ["channel marketing", "loyalty programs", "analytics"],
+  },
+  {
+    id: "role-fp-and-a-analyst",
+    title: "FP&A Analyst",
+    department: "Finance",
+    location: "Delhi NCR",
+    level: "Analyst",
+    mustHaveSkills: ["financial modeling", "SQL", "forecasting"],
+  },
+  {
+    id: "role-export-sales-mgr",
+    title: "Export Sales Manager",
+    department: "International / Exports",
+    location: "Mumbai",
+    level: "Manager",
+    mustHaveSkills: ["international trade", "negotiation", "forecasting"],
+  },
+];
+
+const CANDIDATES: HrCandidate[] = [
+  {
+    id: "cand-1",
+    name: "Ananya Rao",
+    appliedRole: "role-store-ops-mgr",
+    yearsExperience: 7,
+    currentTitle: "Senior Store Manager, regional chain",
+    skills: ["inventory planning", "retail ops", "team leadership", "P&L ownership"],
+    education: "MBA, Operations",
+    interviewScore: 4.5,
+    notes: "Ran a 12-store cluster; cut stockouts 18% YoY. Strong references.",
+  },
+  {
+    id: "cand-2",
+    name: "Vikram Shetty",
+    appliedRole: "role-store-ops-mgr",
+    yearsExperience: 4,
+    currentTitle: "Assistant Store Manager",
+    skills: ["retail ops", "team leadership"],
+    education: "B.Com",
+    interviewScore: 3.4,
+    notes: "Good operator but no direct inventory-planning ownership yet.",
+  },
+  {
+    id: "cand-3",
+    name: "Priya Nair",
+    appliedRole: "role-trade-marketing-lead",
+    yearsExperience: 6,
+    currentTitle: "Trade Marketing Manager, competitor FMCG brand",
+    skills: ["channel marketing", "loyalty programs", "analytics", "vendor negotiation"],
+    education: "MBA, Marketing",
+    interviewScore: 4.7,
+    notes: "Built a loyalty relaunch that lifted repeat purchase 11%.",
+  },
+  {
+    id: "cand-4",
+    name: "Rohan Mehta",
+    appliedRole: "role-trade-marketing-lead",
+    yearsExperience: 3,
+    currentTitle: "Marketing Associate",
+    skills: ["analytics", "social campaigns"],
+    education: "BBA",
+    interviewScore: 3.1,
+    notes: "Strong analytics but limited trade/channel marketing exposure.",
+  },
+  {
+    id: "cand-5",
+    name: "Sana Iqbal",
+    appliedRole: "role-fp-and-a-analyst",
+    yearsExperience: 2,
+    currentTitle: "Financial Analyst, mid-size retailer",
+    skills: ["financial modeling", "SQL", "Excel/VBA"],
+    education: "B.Com, CA (Inter)",
+    interviewScore: 4.0,
+    notes: "Sharp modeling skills; forecasting exposure is mostly academic.",
+  },
+  {
+    id: "cand-6",
+    name: "Devika Menon",
+    appliedRole: "role-export-sales-mgr",
+    yearsExperience: 9,
+    currentTitle: "International Sales Manager, textiles exporter",
+    skills: ["international trade", "negotiation", "forecasting", "LC/documentation"],
+    education: "MBA, International Business",
+    interviewScore: 4.3,
+    notes: "Deep LATAM/EU trade experience; new to FMCG category specifically.",
+  },
+];
+
+const EMPLOYEES: HrEmployee[] = [
+  {
+    id: "emp-1",
+    name: "Kabir Desai",
+    currentTitle: "Store Manager",
+    department: "Supply Chain",
+    tenureYears: 5,
+    performanceRating: "Exceeds expectations",
+    lastPromotion: "2024-04",
+    skills: ["inventory planning", "team leadership", "retail ops"],
+    readyForPromotion: true,
+    notes: "Top-quartile stockout metrics two years running; mentors junior managers.",
+  },
+  {
+    id: "emp-2",
+    name: "Meera Iyer",
+    currentTitle: "Assistant Brand Manager",
+    department: "Customer & Marketing",
+    tenureYears: 3,
+    performanceRating: "Meets expectations",
+    lastPromotion: "2023-10",
+    skills: ["channel marketing", "analytics"],
+    readyForPromotion: false,
+    notes: "Solid but hasn't yet led a campaign end-to-end.",
+  },
+  {
+    id: "emp-3",
+    name: "Arjun Khanna",
+    currentTitle: "Senior Financial Analyst",
+    department: "Finance",
+    tenureYears: 4,
+    performanceRating: "Exceeds expectations",
+    lastPromotion: "2023-06",
+    skills: ["financial modeling", "forecasting", "SQL", "team leadership"],
+    readyForPromotion: true,
+    notes: "Built the monthly forecasting model the whole Finance team now uses.",
+  },
+  {
+    id: "emp-4",
+    name: "Lakshmi Pillai",
+    currentTitle: "Export Coordinator",
+    department: "International / Exports",
+    tenureYears: 6,
+    performanceRating: "Meets expectations",
+    lastPromotion: "2021-02",
+    skills: ["international trade", "documentation"],
+    readyForPromotion: false,
+    notes: "Reliable on documentation/compliance; limited negotiation exposure.",
+  },
+  {
+    id: "emp-5",
+    name: "Rahul Bhatt",
+    currentTitle: "Regional Sales Lead",
+    department: "Sales & Channel",
+    tenureYears: 7,
+    performanceRating: "Exceeds expectations",
+    lastPromotion: "2022-11",
+    skills: ["channel strategy", "team leadership", "negotiation"],
+    readyForPromotion: true,
+    notes: "Grew his region's revenue 22% over two years; wants a national-level role.",
+  },
+];
+
+const ROSTER: HrRoster = { openRoles: OPEN_ROLES, candidates: CANDIDATES, employees: EMPLOYEES };
+
+// Served straight from the bundle rather than the backend -- this roster is
+// reference content for the assistant prompt, not live data, so it doesn't
+// need a round trip (and keeps working even before the backend ships the
+// matching /api/hr/roster route).
 export function useHrRoster() {
-  const [roster, setRoster] = useState<HrRoster | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    api
-      .get<HrRoster>("/api/hr/roster")
-      .then((res) => {
-        if (!cancelled) setRoster(res.data);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message ?? "Failed to load HR roster");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return { roster, loading: !roster && !error, error };
+  return { roster: ROSTER, loading: false, error: null as string | null };
 }
 
 export async function askHiringAssistant(question: string): Promise<string> {
