@@ -201,7 +201,7 @@ export default function Home() {
 
       <div className="flex-1 min-w-0">
         <header className="border-b border-[var(--card-border)] sticky top-0 z-10 backdrop-blur bg-[var(--background)]/85">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
             <div>
               <h1 className="text-lg font-semibold text-[var(--foreground)]">{dept.label}</h1>
               <p className="text-xs text-[var(--chart-muted)]">
@@ -218,7 +218,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
+        <main className="w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
           {dept.id === "exports" ? (
             <InternationalDashboard />
           ) : dept.comingSoon ? (
