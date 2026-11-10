@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-const DOUBLE_CLICK_MS = 400;
+const DOUBLE_CLICK_MS = 500;
 
 /**
  * Click a bar/slice/point to filter everything else by it; click the same
@@ -10,11 +10,10 @@ const DOUBLE_CLICK_MS = 400;
  * that doesn't depend on recharts forwarding a real dblclick event (its
  * onClick already fires reliably on every chart type here; onDoubleClick
  * isn't consistently wired through Bar/Pie/Line in this recharts version).
+ * Deliberately doesn't scroll the page -- moving the page under the cursor
+ * between the two clicks of a double-click is what made it unreliable.
  */
-export function useChartClickFilter<F extends object>(
-  setFilter: (updater: (prev: F) => F) => void,
-  onApplied?: () => void
-) {
+export function useChartClickFilter<F extends object>(setFilter: (updater: (prev: F) => F) => void) {
   const lastRef = useRef<{ key: string; value: unknown; time: number } | null>(null);
 
   return function applyChartFilter(patch: Partial<F>) {
@@ -35,6 +34,5 @@ export function useChartClickFilter<F extends object>(
       setFilter((prev) => ({ ...prev, ...patch }));
       lastRef.current = { key: key as string, value, time: now };
     }
-    onApplied?.();
   };
 }
