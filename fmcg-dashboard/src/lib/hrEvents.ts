@@ -9,6 +9,21 @@ export interface CompanyEvent {
 }
 
 const STORAGE_KEY = "fmcg-hr-custom-events";
+const CHANGE_EVENT = "fmcg-hr-events-changed";
+
+function notifyChanged(): void {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
+// Every useHrEvents() instance (Overview's tile, the HR calendar, etc.) keeps
+// its own copy of this state -- subscribing here is what keeps them in sync
+// with each other within the same tab (a "storage" event alone wouldn't fire
+// in the tab that made the change).
+export function onEventsChanged(listener: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener(CHANGE_EVENT, listener);
+  return () => window.removeEventListener(CHANGE_EVENT, listener);
+}
 
 // Built-in company calendar for 2026. HR-added events (see loadCustomEvents)
 // are layered on top of this at render time, never written back into it.
@@ -64,11 +79,13 @@ export function addCustomEvent(input: { date: string; name: string; type: Compan
   };
   const existing = loadCustomEvents();
   saveCustomEvents([...existing, event]);
+  notifyChanged();
   return event;
 }
 
 export function removeCustomEvent(id: string): void {
   saveCustomEvents(loadCustomEvents().filter((e) => e.id !== id));
+  notifyChanged();
 }
 
 function toLocalDate(iso: string): Date {

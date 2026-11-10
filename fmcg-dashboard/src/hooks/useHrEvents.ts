@@ -6,6 +6,7 @@ import {
   type CompanyEventType,
   addCustomEvent,
   getAllEvents,
+  onEventsChanged,
   removeCustomEvent,
 } from "@/lib/hrEvents";
 
@@ -16,6 +17,7 @@ export function useHrEvents() {
   useEffect(() => {
     setEvents(getAllEvents());
     setReady(true);
+    return onEventsChanged(() => setEvents(getAllEvents()));
   }, []);
 
   const addEvent = useCallback((input: { date: string; name: string; type: CompanyEventType }) => {
