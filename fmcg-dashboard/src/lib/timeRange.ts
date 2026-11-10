@@ -17,10 +17,10 @@ export interface TimeRangeOption {
 
 export const TIME_RANGES: TimeRangeOption[] = [
   { id: "2024", label: "2024", monthsBack: null, year: 2024 },
-  { id: "12m", label: "Last Year (2025)", monthsBack: null, year: 2025 },
-  { id: "present", label: "Present Year (2026)", monthsBack: null, year: 2026 },
-  { id: "9m", label: "9 Months", monthsBack: 9 },
-  { id: "6m", label: "6 Months", monthsBack: 6 },
-  { id: "3m", label: "Quarterly", monthsBack: 3 },
-  { id: "custom", label: "Custom Range", monthsBack: null },
+  { id: "12m", label: "2025", monthsBack: null, year: 2025 },
+  { id: "present", label: "2026", monthsBack: null, year: 2026 },
+  { id: "9m", label: "9mo", monthsBack: 9 },
+  { id: "6m", label: "6mo", monthsBack: 6 },
+  { id: "3m", label: "Qtr", monthsBack: 3 },
+  { id: "custom", label: "Custom", monthsBack: null },
 ];
