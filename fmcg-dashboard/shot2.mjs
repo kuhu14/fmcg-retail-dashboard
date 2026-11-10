@@ -3,7 +3,8 @@ import { chromium } from "playwright";
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
 
-await page.goto("http://localhost:3001", { waitUntil: "networkidle", timeout: 60000 });
+await page.goto("http://localhost:3001", { waitUntil: "load", timeout: 60000 });
+await page.waitForTimeout(1500);
 
 await page.getByText("HR", { exact: true }).click();
 await page.waitForTimeout(500);
