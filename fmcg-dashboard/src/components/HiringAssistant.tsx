@@ -49,7 +49,7 @@ export function HiringAssistant() {
     <div className="flex flex-col gap-4">
       <Card
         title="Hiring & promotion assistant"
-        subtitle="Claude-powered — reasons only over the mock roster below, never real employee data"
+        subtitle="Claude-powered — reasons over open roles, candidates, and promotion-eligible employees"
       >
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="rounded-lg border border-[var(--card-border)] bg-[var(--background)] px-3 py-2">
