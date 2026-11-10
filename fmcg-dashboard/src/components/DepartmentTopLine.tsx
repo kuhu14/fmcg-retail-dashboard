@@ -3,6 +3,7 @@
 import type { DepartmentId } from "@/lib/departments";
 import type { Trend } from "@/lib/trend";
 import { TREND_STYLE } from "./KpiCards";
+import { DepartmentIcon } from "./DepartmentIcon";
 
 export interface TopLineItem {
   id: DepartmentId;
@@ -34,7 +35,8 @@ export function DepartmentTopLine({
               item.comingSoon ? "opacity-50 cursor-default" : "hover:border-[var(--chart-axis)] cursor-pointer"
             }`}
           >
-            <span className="text-xs font-medium text-[var(--chart-muted)] uppercase tracking-wide">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--chart-muted)] uppercase tracking-wide">
+              <DepartmentIcon id={item.id} className="w-3.5 h-3.5 shrink-0" />
               {item.label}
             </span>
             {item.comingSoon ? (

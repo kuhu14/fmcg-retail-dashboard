@@ -1,6 +1,7 @@
 "use client";
 
 import { DEPARTMENTS, type DepartmentId } from "@/lib/departments";
+import { DepartmentIcon } from "./DepartmentIcon";
 
 export function Sidebar({
   activeId,
@@ -34,6 +35,12 @@ export function Sidebar({
                   }`}
                 >
                   <span className="flex items-center gap-2">
+                    <DepartmentIcon
+                      id={dept.id}
+                      className={`w-4 h-4 shrink-0 ${
+                        active ? "text-[var(--background)]" : "text-[var(--chart-muted)]"
+                      }`}
+                    />
                     {dept.label}
                     {dept.comingSoon && (
                       <span
