@@ -191,12 +191,17 @@ export default function Home() {
       sub: "Total revenue",
       trend: intlTrendOf("revenue"),
     },
-    {
-      id: "hr",
-      label: "HR",
-      value: "2 tools",
-      sub: "Calendar · Hiring Assistant",
-    },
+    (() => {
+      const nextEvent = getNextEvent(hrEvents);
+      return {
+        id: "hr" as const,
+        label: "HR",
+        value: nextEvent ? nextEvent.name : "No events",
+        sub: nextEvent
+          ? `${formatEventDate(nextEvent.date)} · in ${daysUntil(nextEvent.date)} days`
+          : "Add one from the HR calendar",
+      };
+    })(),
   ];
 
   return (
