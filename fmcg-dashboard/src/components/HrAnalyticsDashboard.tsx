@@ -20,6 +20,7 @@ import { entityColorScale } from "@/lib/palette";
 import { formatNumber, formatPct, monthLabel } from "@/lib/format";
 import { monthlyTrendDirection } from "@/lib/trend";
 import { TIME_RANGES, type TimeRangeId } from "@/lib/timeRange";
+import { useChartClickFilter } from "@/hooks/useChartClickFilter";
 import {
   ATTRITION_BY_AGE_GROUP,
   ATTRITION_BY_EDUCATION_FIELD,
@@ -206,8 +207,9 @@ export function HrAnalyticsDashboard() {
 
   const setFilter = (key: HrFilterDimension, value: string) =>
     setFilters((prev) => ({ ...prev, [key]: value || undefined }));
-  const toggleFilter = (key: HrFilterDimension, value: string) =>
-    setFilters((prev) => ({ ...prev, [key]: prev[key] === value ? undefined : value }));
+  const applyChartFilter = useChartClickFilter<HrFilterState>(setFilters, () =>
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  );
   const resetFilters = () => setFilters({});
 
   const filteredAttritionCount = useMemo(
@@ -298,7 +300,7 @@ export function HrAnalyticsDashboard() {
             dimension="hr-gender"
             data={genderData}
             activeName={filters.gender ?? null}
-            onBarClick={(name) => toggleFilter("gender", name)}
+            onBarClick={(name) => applyChartFilter({ gender: name })}
           />
         </Card>
         <Card title="Attrition by education field">
@@ -310,7 +312,7 @@ export function HrAnalyticsDashboard() {
             unit="%"
             valueLabel="Share"
             activeName={filters.educationField ?? null}
-            onBarClick={(name) => toggleFilter("educationField", name)}
+            onBarClick={(name) => applyChartFilter({ educationField: name })}
           />
         </Card>
         <Card title="Attrition by age group">
@@ -318,7 +320,7 @@ export function HrAnalyticsDashboard() {
             dimension="hr-age"
             data={ageGroupData}
             activeName={filters.ageGroup ?? null}
-            onBarClick={(name) => toggleFilter("ageGroup", name)}
+            onBarClick={(name) => applyChartFilter({ ageGroup: name })}
           />
         </Card>
         <Card title="Attrition by tenure">
@@ -326,7 +328,7 @@ export function HrAnalyticsDashboard() {
             dimension="hr-tenure"
             data={tenureData}
             activeName={filters.tenureBand ?? null}
-            onBarClick={(name) => toggleFilter("tenureBand", name)}
+            onBarClick={(name) => applyChartFilter({ tenureBand: name })}
           />
         </Card>
         <Card title="Attrition by salary band">
@@ -336,7 +338,7 @@ export function HrAnalyticsDashboard() {
             layout="horizontal"
             height={200}
             activeName={filters.salaryBand ?? null}
-            onBarClick={(name) => toggleFilter("salaryBand", name)}
+            onBarClick={(name) => applyChartFilter({ salaryBand: name })}
           />
         </Card>
         <Card title="Attrition by job role">
@@ -346,7 +348,7 @@ export function HrAnalyticsDashboard() {
             layout="horizontal"
             height={280}
             activeName={filters.jobRole ?? null}
-            onBarClick={(name) => toggleFilter("jobRole", name)}
+            onBarClick={(name) => applyChartFilter({ jobRole: name })}
           />
         </Card>
       </div>

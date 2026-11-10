@@ -4,7 +4,8 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { Insight, IntlSummary, RecordFilter, Summary } from "@/lib/types";
 import { useGlobalRecordCount, useSummary } from "@/hooks/useApi";
 import { useIntlSummary } from "@/hooks/useIntlApi";
-import { HR_SUMMARY } from "@/lib/hrAnalytics";
+import { HR_MONTHLY_TREND, HR_SUMMARY } from "@/lib/hrAnalytics";
+import { useChartClickFilter } from "@/hooks/useChartClickFilter";
 import { API_BASE_URL } from "@/lib/api";
 import { DEPARTMENTS, type DepartmentId } from "@/lib/departments";
 import { Kpi } from "@/components/KpiCards";
@@ -83,18 +84,9 @@ export default function Home() {
     tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function applyChartFilter(patch: RecordFilter) {
-    setFilter((prev) => {
-      const key = Object.keys(patch)[0] as keyof RecordFilter;
-      if (prev[key] === patch[key]) {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }
-      return { ...prev, ...patch };
-    });
-    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  const applyChartFilter = useChartClickFilter<RecordFilter>(setFilter, () =>
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  );
 
   function resetFilter() {
     setFilter(EMPTY_FILTER);
@@ -194,6 +186,7 @@ export default function Home() {
       label: "HR",
       value: formatNumber(HR_SUMMARY.headcount),
       sub: `${formatPct(HR_SUMMARY.attritionRatePct)} attrition (${HR_SUMMARY.attritionCount} employees)`,
+      trend: monthlyTrendDirection(HR_MONTHLY_TREND, "headcount"),
     },
   ];
 

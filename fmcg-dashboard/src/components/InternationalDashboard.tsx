@@ -12,6 +12,7 @@ import { RevenueBarChart } from "./charts/RevenueBarChart";
 import { MixDonutChart } from "./charts/MixDonutChart";
 import { formatNumber, formatUSD } from "@/lib/format";
 import { monthlyTrendDirection } from "@/lib/trend";
+import { useChartClickFilter } from "@/hooks/useChartClickFilter";
 
 const EMPTY_FILTER: IntlFilter = {};
 
@@ -38,18 +39,9 @@ export function InternationalDashboard() {
     });
   }
 
-  function applyChartFilter(patch: IntlFilter) {
-    setFilter((prev) => {
-      const key = Object.keys(patch)[0] as keyof IntlFilter;
-      if (prev[key] === patch[key]) {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }
-      return { ...prev, ...patch };
-    });
-    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  const applyChartFilter = useChartClickFilter<IntlFilter>(setFilter, () =>
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  );
 
   function applyInsight(insight: IntlInsight) {
     setFilter((prev) => (sameFilter(prev, insight.filter) ? EMPTY_FILTER : insight.filter));
