@@ -39,9 +39,7 @@ export function InternationalDashboard() {
     });
   }
 
-  const applyChartFilter = useChartClickFilter<IntlFilter>(setFilter, () =>
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  );
+  const applyChartFilter = useChartClickFilter<IntlFilter>(setFilter);
 
   function applyInsight(insight: IntlInsight) {
     setFilter((prev) => (sameFilter(prev, insight.filter) ? EMPTY_FILTER : insight.filter));

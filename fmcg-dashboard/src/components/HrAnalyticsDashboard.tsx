@@ -207,9 +207,7 @@ export function HrAnalyticsDashboard() {
 
   const setFilter = (key: HrFilterDimension, value: string) =>
     setFilters((prev) => ({ ...prev, [key]: value || undefined }));
-  const applyChartFilter = useChartClickFilter<HrFilterState>(setFilters, () =>
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  );
+  const applyChartFilter = useChartClickFilter<HrFilterState>(setFilters);
   const resetFilters = () => setFilters({});
 
   const filteredAttritionCount = useMemo(

@@ -85,9 +85,7 @@ export default function Home() {
     tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const applyChartFilter = useChartClickFilter<RecordFilter>(setFilter, () =>
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  );
+  const applyChartFilter = useChartClickFilter<RecordFilter>(setFilter);
 
   function resetFilter() {
     setFilter(EMPTY_FILTER);
