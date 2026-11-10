@@ -29,7 +29,7 @@ export function FilterPanel({
 }) {
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--chart-surface)] p-3">
-      <div className="flex flex-wrap items-start gap-x-5 gap-y-3">
+      <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
         <FilterGroup label="Geography">
           <FilterSelect
             label="Cities"

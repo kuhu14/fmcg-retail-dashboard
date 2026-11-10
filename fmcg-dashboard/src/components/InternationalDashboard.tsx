@@ -79,7 +79,7 @@ export function InternationalDashboard() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--chart-surface)] p-3">
-        <div className="flex flex-wrap items-start gap-x-5 gap-y-3">
+        <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
           <FilterGroup label="Geography">
             <FilterSelect
               label="Countries"
@@ -126,7 +126,7 @@ export function InternationalDashboard() {
                     type="button"
                     aria-pressed={active}
                     onClick={() => setFilterField("year", active ? "" : String(opt.year))}
-                    className={`px-2.5 h-7 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+                    className={`px-1.5 h-7 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                       active
                         ? "bg-[var(--foreground)] text-[var(--background)]"
                         : "text-[var(--foreground)] hover:bg-[var(--chart-gridline)]/40"

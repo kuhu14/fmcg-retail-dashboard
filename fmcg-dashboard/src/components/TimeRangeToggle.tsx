@@ -19,7 +19,7 @@ export function TimeRangeToggle({
             type="button"
             onClick={() => onChange(range.id)}
             aria-pressed={active}
-            className={`px-2.5 h-7 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+            className={`px-1.5 h-7 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
               active
                 ? "bg-[var(--foreground)] text-[var(--background)]"
                 : "text-[var(--foreground)] hover:bg-[var(--chart-gridline)]/40"
