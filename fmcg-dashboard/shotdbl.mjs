@@ -22,8 +22,8 @@ await firstBar.click();
 await page.waitForTimeout(150);
 console.log("AFTER CLICK 1:", await filterText());
 
-await firstBar.click();
-await page.waitForTimeout(150);
-console.log("AFTER CLICK 2 (fast repeat):", await filterText());
+await firstBar.dblclick();
+await page.waitForTimeout(400);
+console.log("AFTER NATIVE DBLCLICK:", await filterText());
 
 await browser.close();
