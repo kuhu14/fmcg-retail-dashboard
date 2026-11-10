@@ -5,12 +5,15 @@ from functools import lru_cache
 
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
+from pydantic import BaseModel
 
 from app.aggregates import build_summary
 from app.db import db_version, get_db
 from app.records import query_all_matching, query_records
 from app import international as intl
+from app.hiring_assistant import HiringAssistantError, ask_hiring_assistant
+from app.hr_data import CANDIDATES, EMPLOYEES, OPEN_ROLES
 
 app = FastAPI(title="FMCG Retail API")
 
@@ -22,7 +25,7 @@ _extra_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", *_extra_origins],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -157,6 +160,24 @@ def _cached_intl_records(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+class HrAskRequest(BaseModel):
+    question: str
+
+
+@app.get("/api/hr/roster")
+def get_hr_roster():
+    return {"openRoles": OPEN_ROLES, "candidates": CANDIDATES, "employees": EMPLOYEES}
+
+
+@app.post("/api/hr/ask")
+def post_hr_ask(payload: HrAskRequest):
+    try:
+        answer = ask_hiring_assistant(payload.question)
+    except HiringAssistantError as e:
+        return JSONResponse(status_code=503, content={"error": str(e)})
+    return {"answer": answer}
 
 
 @app.get("/api/summary")

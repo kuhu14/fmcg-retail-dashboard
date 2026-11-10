@@ -49,8 +49,7 @@ export const DEPARTMENTS: Department[] = [
   {
     id: "hr",
     label: "HR",
-    description: "Workforce & staffing data",
-    comingSoon: true,
+    description: "Company calendar & an AI hiring/promotion assistant",
   },
   {
     id: "exports",

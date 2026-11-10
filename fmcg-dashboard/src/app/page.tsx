@@ -13,6 +13,7 @@ import { DrillDownTable } from "@/components/DrillDownTable";
 import { Card } from "@/components/Card";
 import { ComingSoon } from "@/components/ComingSoon";
 import { InternationalDashboard } from "@/components/InternationalDashboard";
+import { HrDashboard } from "@/components/HrDashboard";
 import { DepartmentTopLine, type TopLineItem } from "@/components/DepartmentTopLine";
 import { FilterBar } from "@/components/FilterBar";
 import { FilterPanel } from "@/components/FilterPanel";
@@ -190,8 +191,8 @@ export default function Home() {
     {
       id: "hr",
       label: "HR",
-      value: "",
-      comingSoon: true,
+      value: "2 tools",
+      sub: "Calendar · Hiring Assistant",
     },
   ];
 
@@ -221,6 +222,8 @@ export default function Home() {
         <main className="w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
           {dept.id === "exports" ? (
             <InternationalDashboard />
+          ) : dept.id === "hr" ? (
+            <HrDashboard />
           ) : dept.comingSoon ? (
             <ComingSoon label={dept.label} description={dept.description} />
           ) : (
