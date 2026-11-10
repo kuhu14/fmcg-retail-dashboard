@@ -6,7 +6,8 @@ const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
 await page.goto("http://localhost:3001", { waitUntil: "load", timeout: 60000 });
 await page.waitForTimeout(1500);
 
-await page.getByText("HR", { exact: true }).click();
+await page.screenshot({ path: "debug-initial.png", fullPage: true });
+await page.getByRole("button", { name: "HR" }).click();
 await page.waitForTimeout(500);
 
 await page.getByText("Hiring Assistant", { exact: true }).click();
