@@ -4,6 +4,8 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { Insight, IntlSummary, RecordFilter, Summary } from "@/lib/types";
 import { useGlobalRecordCount, useSummary } from "@/hooks/useApi";
 import { useIntlSummary } from "@/hooks/useIntlApi";
+import { useHrEvents } from "@/hooks/useHrEvents";
+import { daysUntil, formatEventDate, getNextEvent } from "@/lib/hrEvents";
 import { API_BASE_URL } from "@/lib/api";
 import { DEPARTMENTS, type DepartmentId } from "@/lib/departments";
 import { Kpi } from "@/components/KpiCards";
@@ -45,6 +47,7 @@ export default function Home() {
   const [timeRange, setTimeRange] = useState<TimeRangeId>("2024");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  const { events: hrEvents } = useHrEvents();
   const tableRef = useRef<HTMLDivElement>(null);
 
   const dept = useMemo(() => DEPARTMENTS.find((d) => d.id === activeDept)!, [activeDept]);
