@@ -21,6 +21,7 @@ import { FilterBar } from "@/components/FilterBar";
 import { FilterPanel } from "@/components/FilterPanel";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { BackToOverviewButton } from "@/components/BackToOverviewButton";
 import { RevenueBarChart } from "@/components/charts/RevenueBarChart";
 import { MixDonutChart } from "@/components/charts/MixDonutChart";
 import { TrendChart } from "@/components/charts/TrendChart";
@@ -209,7 +210,12 @@ export default function Home() {
                       : dept.description}
               </p>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-3">
+              {dept.id !== "overview" && (
+                <BackToOverviewButton onClick={() => setActiveDept("overview")} />
+              )}
+              <ThemeToggle />
+            </div>
           </div>
         </header>
 
