@@ -4,8 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { Insight, IntlSummary, RecordFilter, Summary } from "@/lib/types";
 import { useGlobalRecordCount, useSummary } from "@/hooks/useApi";
 import { useIntlSummary } from "@/hooks/useIntlApi";
-import { useHrEvents } from "@/hooks/useHrEvents";
-import { daysUntil, formatEventDate, getNextEvent } from "@/lib/hrEvents";
+import { HR_SUMMARY } from "@/lib/hrAnalytics";
 import { API_BASE_URL } from "@/lib/api";
 import { DEPARTMENTS, type DepartmentId } from "@/lib/departments";
 import { Kpi } from "@/components/KpiCards";
@@ -47,7 +46,6 @@ export default function Home() {
   const [timeRange, setTimeRange] = useState<TimeRangeId>("2024");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
-  const { events: hrEvents } = useHrEvents();
   const tableRef = useRef<HTMLDivElement>(null);
 
   const dept = useMemo(() => DEPARTMENTS.find((d) => d.id === activeDept)!, [activeDept]);
@@ -191,17 +189,12 @@ export default function Home() {
       sub: "Total revenue",
       trend: intlTrendOf("revenue"),
     },
-    (() => {
-      const nextEvent = getNextEvent(hrEvents);
-      return {
-        id: "hr" as const,
-        label: "HR",
-        value: nextEvent ? nextEvent.name : "No events",
-        sub: nextEvent
-          ? `${formatEventDate(nextEvent.date)} · in ${daysUntil(nextEvent.date)} days`
-          : "Add one from the HR calendar",
-      };
-    })(),
+    {
+      id: "hr" as const,
+      label: "HR",
+      value: formatNumber(HR_SUMMARY.headcount),
+      sub: `${formatPct(HR_SUMMARY.attritionRatePct)} attrition (${HR_SUMMARY.attritionCount} employees)`,
+    },
   ];
 
   return (

@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { HrCalendar } from "./HrCalendar";
+import { HrAnalyticsDashboard } from "./HrAnalyticsDashboard";
 import { HiringAssistant } from "./HiringAssistant";
 
-type HrTab = "calendar" | "assistant";
+type HrTab = "analytics" | "assistant";
 
 const TABS: { id: HrTab; label: string }[] = [
-  { id: "calendar", label: "Calendar" },
+  { id: "analytics", label: "Analytics" },
   { id: "assistant", label: "Hiring Assistant" },
 ];
 
 export function HrDashboard() {
-  const [tab, setTab] = useState<HrTab>("calendar");
+  const [tab, setTab] = useState<HrTab>("analytics");
 
   return (
     <div className="flex flex-col gap-4">
@@ -37,7 +37,7 @@ export function HrDashboard() {
         })}
       </div>
 
-      {tab === "calendar" ? <HrCalendar /> : <HiringAssistant />}
+      {tab === "analytics" ? <HrAnalyticsDashboard /> : <HiringAssistant />}
     </div>
   );
 }
