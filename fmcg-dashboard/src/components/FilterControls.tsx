@@ -8,7 +8,7 @@ export function FilterGroup({ label, children }: { label: string; children: Reac
       <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--chart-muted)] whitespace-nowrap">
         {label}
       </span>
-      <div className="flex flex-nowrap items-center gap-1.5">{children}</div>
+      <div className="flex flex-wrap items-center gap-1.5">{children}</div>
     </div>
   );
 }
