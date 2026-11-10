@@ -23,8 +23,6 @@ export function useChartClickFilter<F extends object>(
     const now = Date.now();
     const last = lastRef.current;
     const isRepeat = !!last && last.key === key && last.value === value && now - last.time < DOUBLE_CLICK_MS;
-    // eslint-disable-next-line no-console
-    console.log("DEBUG applyChartFilter", { key, value, last, now, isRepeat });
 
     if (isRepeat) {
       setFilter((prev) => {
