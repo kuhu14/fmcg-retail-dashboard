@@ -26,7 +26,23 @@ export function TrendChart({
 
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <LineChart data={rows} margin={{ top: 8, right: 12, left: 8, bottom: 8 }}>
+      <LineChart
+        data={rows}
+        margin={{ top: 8, right: 12, left: 8, bottom: 8 }}
+        style={{ cursor: onPointClick ? "pointer" : undefined }}
+        onClick={(state) => {
+          // Recharts renders an invisible full-height tracking layer on top
+          // of the line/dots for hover + tooltip purposes, which eats clicks
+          // meant for the small dot circles beneath it. Reading the nearest
+          // point back off the click event itself (instead of relying on the
+          // dot's own onClick) means clicking anywhere in a month's column
+          // selects it, not just a few pixels of dot. activeIndex comes back
+          // as a numeric string in this recharts version, not a number.
+          const idx = state?.activeIndex == null ? NaN : Number(state.activeIndex);
+          const month = Number.isNaN(idx) ? undefined : rows[idx]?.month;
+          if (month) onPointClick?.(month);
+        }}
+      >
         <CartesianGrid stroke="var(--chart-gridline)" vertical={false} />
         <XAxis
           dataKey="label"
