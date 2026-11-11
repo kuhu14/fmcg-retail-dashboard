@@ -3,6 +3,9 @@ import { chromium } from "playwright";
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
 page.on("pageerror", (err) => console.log("[pageerror]", err.message));
+page.on("request", (req) => {
+  if (req.url().includes("/api/summary")) console.log("[req]", req.url());
+});
 
 await page.goto("http://localhost:3001/", { waitUntil: "load", timeout: 60000 });
 await page.waitForTimeout(2000);
