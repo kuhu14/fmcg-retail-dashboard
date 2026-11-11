@@ -42,17 +42,19 @@ export default function Home() {
   // touches what Sales or Overview are showing, and switching tabs doesn't
   // carry a filter over to an unrelated department.
   const [filtersByDept, setFiltersByDept] = useState<Partial<Record<DepartmentId, RecordFilter>>>({});
-  // One toggle for the whole dashboard (not per-department, unlike the bar/
-  // insight filters above) -- it narrows what every department means by
-  // "the data" at once.
-  const [timeRange, setTimeRange] = useState<TimeRangeId>("2024");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  // Time range is also per-department now, same reasoning as filtersByDept --
+  // switching the year on Finance shouldn't move Supply Chain's data under it.
+  const [timeRangeByDept, setTimeRangeByDept] = useState<Partial<Record<DepartmentId, TimeRangeId>>>({});
+  const [customFromByDept, setCustomFromByDept] = useState<Partial<Record<DepartmentId, string>>>({});
+  const [customToByDept, setCustomToByDept] = useState<Partial<Record<DepartmentId, string>>>({});
   const tableRef = useRef<HTMLDivElement>(null);
   const chartsRef = useRef<HTMLDivElement>(null);
 
   const dept = useMemo(() => DEPARTMENTS.find((d) => d.id === activeDept)!, [activeDept]);
   const filter = filtersByDept[activeDept] ?? EMPTY_FILTER;
+  const timeRange = timeRangeByDept[activeDept] ?? "2024";
+  const customFrom = customFromByDept[activeDept] ?? "";
+  const customTo = customToByDept[activeDept] ?? "";
   const activeRange = TIME_RANGES.find((r) => r.id === timeRange)!;
   const timeFilter: RecordFilter =
     timeRange === "custom"
@@ -73,6 +75,36 @@ export default function Home() {
         return { ...prev, [activeDept]: resolved };
       });
     },
+    [activeDept]
+  );
+
+  const setTimeRange = useCallback(
+    (id: TimeRangeId) => {
+      setTimeRangeByDept((prev) => ({ ...prev, [activeDept]: id }));
+      // Switching between absolute years (2024 -> 2025, say) with a month
+      // already picked should move that month to the new year rather than
+      // leaving it pointing at the old one (which would silently mismatch
+      // the year filter) or dropping the selection entirely.
+      const oldYear = TIME_RANGES.find((r) => r.id === (timeRangeByDept[activeDept] ?? "2024"))?.year;
+      const newYear = TIME_RANGES.find((r) => r.id === id)?.year;
+      if (oldYear && newYear && oldYear !== newYear) {
+        setFiltersByDept((prev) => {
+          const current = prev[activeDept];
+          if (!current?.month) return prev;
+          const [, mm] = current.month.split("-");
+          return { ...prev, [activeDept]: { ...current, month: `${newYear}-${mm}` } };
+        });
+      }
+    },
+    [activeDept, timeRangeByDept]
+  );
+
+  const setCustomFrom = useCallback(
+    (value: string) => setCustomFromByDept((prev) => ({ ...prev, [activeDept]: value })),
+    [activeDept]
+  );
+  const setCustomTo = useCallback(
+    (value: string) => setCustomToByDept((prev) => ({ ...prev, [activeDept]: value })),
     [activeDept]
   );
 
