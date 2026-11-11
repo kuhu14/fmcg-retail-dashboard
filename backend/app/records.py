@@ -84,11 +84,16 @@ def build_where(filters: dict) -> tuple[str, list]:
         clauses.append("invoice_date < ?")
         params.append(next_day.isoformat())
 
-    if filters.get("stockRisk"):
+    # stockRisk/overstock/healthy are mutually exclusive stock-on-hand bands,
+    # so they're one filter field with three values rather than three
+    # independent booleans -- that way the UI can never end up with two
+    # contradictory bands ANDed together (which would always match zero rows).
+    if filters.get("stockHealth") == "atRisk":
         clauses.append("stock_on_hand <= reorder_level")
-
-    if filters.get("overstock"):
+    elif filters.get("stockHealth") == "overstocked":
         clauses.append("stock_on_hand > 3 * reorder_level")
+    elif filters.get("stockHealth") == "healthy":
+        clauses.append("stock_on_hand > reorder_level AND stock_on_hand <= 3 * reorder_level")
 
     if filters.get("ageMissing"):
         clauses.append("customer_age IS NULL")

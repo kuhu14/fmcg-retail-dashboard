@@ -319,7 +319,7 @@ def build_insights(summary: dict) -> list[dict]:
                 else "No line items in this view are at or below their reorder level."
             ),
             "actionLabel": "View at-risk inventory",
-            "filter": {"stockRisk": True},
+            "filter": {"stockHealth": "atRisk"},
         }
     )
 
@@ -333,7 +333,7 @@ def build_insights(summary: dict) -> list[dict]:
                 "tying up working capital in slow-moving inventory."
             ),
             "actionLabel": "View overstocked items",
-            "filter": {"overstock": True},
+            "filter": {"stockHealth": "overstocked"},
         }
     )
 

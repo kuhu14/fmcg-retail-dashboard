@@ -8,8 +8,12 @@ export const FILTER_LABELS: Record<string, (v: unknown) => string> = {
   gender: (v) => `Gender: ${v}`,
   loyalty: (v) => (v === 1 ? "Loyalty: Member" : "Loyalty: Non-member"),
   month: (v) => `Month: ${v}`,
-  stockRisk: () => "At/below reorder level",
-  overstock: () => "Overstocked (>3x reorder)",
+  stockHealth: (v) =>
+    v === "atRisk"
+      ? "At/below reorder level"
+      : v === "overstocked"
+        ? "Overstocked (>3x reorder)"
+        : "Healthy stock level",
   ageMissing: () => "Age not captured",
   search: (v) => `Invoice ID contains "${v}"`,
 };

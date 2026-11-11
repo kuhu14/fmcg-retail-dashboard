@@ -102,8 +102,7 @@ export interface RecordFilter {
   year?: number;
   dateFrom?: string;
   dateTo?: string;
-  stockRisk?: boolean;
-  overstock?: boolean;
+  stockHealth?: "atRisk" | "overstocked" | "healthy";
   ageMissing?: boolean;
   search?: string;
 }

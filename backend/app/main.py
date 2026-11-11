@@ -74,8 +74,7 @@ def record_filters(
     year: int | None = Query(default=None, ge=2000, le=2100),
     dateFrom: str | None = None,
     dateTo: str | None = None,
-    stockRisk: bool | None = None,
-    overstock: bool | None = None,
+    stockHealth: str | None = None,
     ageMissing: bool | None = None,
     search: str | None = None,
 ) -> dict:
@@ -93,8 +92,7 @@ def record_filters(
         "dateTo": dateTo,
         "sinceMonth": _resolve_since_month(monthsBack),
         "year": year,
-        "stockRisk": stockRisk,
-        "overstock": overstock,
+        "stockHealth": stockHealth,
         "ageMissing": ageMissing,
         "search": search,
     }

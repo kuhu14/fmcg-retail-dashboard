@@ -485,18 +485,20 @@ export default function Home() {
                           orders: data.totals.orders - data.inventory.stockoutRisk - data.inventory.overstock,
                         },
                       ]}
-                      activeName={filter.stockRisk ? "At risk" : filter.overstock ? "Overstocked" : null}
-                      onSliceClick={(name) => {
-                        if (name === "At risk") applyChartFilter({ stockRisk: true });
-                        else if (name === "Overstocked") applyChartFilter({ overstock: true });
-                        else
-                          setFilter((prev) => {
-                            const next = { ...prev };
-                            delete next.stockRisk;
-                            delete next.overstock;
-                            return next;
-                          });
-                      }}
+                      activeName={
+                        filter.stockHealth === "atRisk"
+                          ? "At risk"
+                          : filter.stockHealth === "overstocked"
+                            ? "Overstocked"
+                            : filter.stockHealth === "healthy"
+                              ? "Healthy"
+                              : null
+                      }
+                      onSliceClick={(name) =>
+                        applyChartFilter({
+                          stockHealth: name === "At risk" ? "atRisk" : name === "Overstocked" ? "overstocked" : "healthy",
+                        })
+                      }
                       formatValue={(v) => formatNumber(v)}
                     />
                   </Card>

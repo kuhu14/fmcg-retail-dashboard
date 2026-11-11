@@ -81,8 +81,7 @@ function filterToParams(filter: RecordFilter): Record<string, string | number | 
   if (filter.year !== undefined) params.year = filter.year;
   if (filter.dateFrom) params.dateFrom = filter.dateFrom;
   if (filter.dateTo) params.dateTo = filter.dateTo;
-  if (filter.stockRisk) params.stockRisk = true;
-  if (filter.overstock) params.overstock = true;
+  if (filter.stockHealth) params.stockHealth = filter.stockHealth;
   if (filter.ageMissing) params.ageMissing = true;
   if (filter.search) params.search = filter.search;
   return params;
