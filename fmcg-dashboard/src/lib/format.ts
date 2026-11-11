@@ -35,7 +35,8 @@ export function formatPct(value: number, digits = 1): string {
   return `${value.toFixed(digits)}%`;
 }
 
-export function formatDate(dateStr: string): string {
+export function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "—";
   const [datePart, timePart] = dateStr.split(" ");
   const [, m, d] = datePart.split("-");
   const monthNames = [
