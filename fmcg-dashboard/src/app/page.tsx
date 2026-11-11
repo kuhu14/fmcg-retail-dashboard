@@ -49,6 +49,7 @@ export default function Home() {
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
   const tableRef = useRef<HTMLDivElement>(null);
+  const chartsRef = useRef<HTMLDivElement>(null);
 
   const dept = useMemo(() => DEPARTMENTS.find((d) => d.id === activeDept)!, [activeDept]);
   const filter = filtersByDept[activeDept] ?? EMPTY_FILTER;
@@ -82,7 +83,7 @@ export default function Home() {
 
   function applyInsight(insight: Insight) {
     setFilter((prev) => (sameFilter(prev, insight.filter) ? EMPTY_FILTER : insight.filter));
-    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    chartsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   const applyChartFilter = useChartClickFilter<RecordFilter>(setFilter);
@@ -400,9 +401,9 @@ export default function Home() {
                 />
               </section>
 
-              <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {(dept.id === "overview" || dept.id === "sales") && (
-                  <Card title="Revenue by category" subtitle="Click a bar to filter the table below">
+              <section ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {(dept.id === "overview" || dept.id === "sales" || dept.id === "finance") && (
+                  <Card title="Revenue by category" subtitle="Click a bar to filter by category">
                     <RevenueBarChart
                       dimension="category"
                       data={data.byCategory.map((c) => ({
@@ -418,7 +419,7 @@ export default function Home() {
                 )}
 
                 {(dept.id === "overview" || dept.id === "sales") && (
-                  <Card title="Revenue by city" subtitle="Click a bar to filter the table below">
+                  <Card title="Revenue by city" subtitle="Click a bar to filter by city">
                     <RevenueBarChart
                       dimension="city"
                       data={data.byCity.map((c) => ({
@@ -459,6 +460,44 @@ export default function Home() {
                       data={data.inventory.byCity.map((c) => ({ name: c.city, atRiskOrders: c.atRiskOrders }))}
                       activeName={filter.city ?? null}
                       onBarClick={(name) => applyChartFilter({ city: name })}
+                    />
+                  </Card>
+                )}
+
+                {dept.id === "supply-chain" && (
+                  <Card title="Inventory health mix" subtitle="Share of orders by stock status">
+                    <MixDonutChart
+                      dimension="stockHealth"
+                      data={[
+                        {
+                          name: "At risk",
+                          revenue: data.inventory.stockoutRisk,
+                          orders: data.inventory.stockoutRisk,
+                        },
+                        {
+                          name: "Overstocked",
+                          revenue: data.inventory.overstock,
+                          orders: data.inventory.overstock,
+                        },
+                        {
+                          name: "Healthy",
+                          revenue: data.totals.orders - data.inventory.stockoutRisk - data.inventory.overstock,
+                          orders: data.totals.orders - data.inventory.stockoutRisk - data.inventory.overstock,
+                        },
+                      ]}
+                      activeName={filter.stockRisk ? "At risk" : filter.overstock ? "Overstocked" : null}
+                      onSliceClick={(name) => {
+                        if (name === "At risk") applyChartFilter({ stockRisk: true });
+                        else if (name === "Overstocked") applyChartFilter({ overstock: true });
+                        else
+                          setFilter((prev) => {
+                            const next = { ...prev };
+                            delete next.stockRisk;
+                            delete next.overstock;
+                            return next;
+                          });
+                      }}
+                      formatValue={(v) => formatNumber(v)}
                     />
                   </Card>
                 )}
@@ -507,6 +546,37 @@ export default function Home() {
                       }))}
                       activeName={filter.loyalty === undefined ? null : filter.loyalty === 1 ? "Loyalty members" : "Non-loyalty"}
                       onSliceClick={(name) => applyChartFilter({ loyalty: name === "Loyalty members" ? 1 : 0 })}
+                    />
+                  </Card>
+                )}
+
+                {dept.id === "customer" && (
+                  <Card title="Age data completeness" subtitle="Share of orders with a captured age">
+                    <MixDonutChart
+                      dimension="ageCompleteness"
+                      data={[
+                        {
+                          name: "Age captured",
+                          revenue: data.totals.orders - data.totals.ageMissing,
+                          orders: data.totals.orders - data.totals.ageMissing,
+                        },
+                        {
+                          name: "Age missing",
+                          revenue: data.totals.ageMissing,
+                          orders: data.totals.ageMissing,
+                        },
+                      ]}
+                      activeName={filter.ageMissing ? "Age missing" : null}
+                      onSliceClick={(name) => {
+                        if (name === "Age missing") applyChartFilter({ ageMissing: true });
+                        else
+                          setFilter((prev) => {
+                            const next = { ...prev };
+                            delete next.ageMissing;
+                            return next;
+                          });
+                      }}
+                      formatValue={(v) => formatNumber(v)}
                     />
                   </Card>
                 )}

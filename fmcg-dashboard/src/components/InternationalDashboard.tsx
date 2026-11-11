@@ -23,6 +23,7 @@ function sameFilter(a: IntlFilter, b: IntlFilter): boolean {
 export function InternationalDashboard() {
   const [filter, setFilter] = useState<IntlFilter>(EMPTY_FILTER);
   const tableRef = useRef<HTMLDivElement>(null);
+  const chartsRef = useRef<HTMLDivElement>(null);
   const { summary: data, loading, error } = useIntlSummary(filter);
 
   function setFilterField(key: keyof IntlFilter, raw: string) {
@@ -43,7 +44,7 @@ export function InternationalDashboard() {
 
   function applyInsight(insight: IntlInsight) {
     setFilter((prev) => (sameFilter(prev, insight.filter) ? EMPTY_FILTER : insight.filter));
-    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    chartsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   if (error) {
@@ -175,8 +176,8 @@ export function InternationalDashboard() {
         <InsightCards insights={data.insights} activeInsightId={activeInsightId} onApply={applyInsight} />
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card title="Revenue by country" subtitle="Click a bar to filter the table below">
+      <section ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card title="Revenue by country" subtitle="Click a bar to filter by country">
           <RevenueBarChart
             dimension="country"
             data={data.byCountry.map((c) => ({ name: c.country, revenue: c.revenue, orders: c.orders }))}
