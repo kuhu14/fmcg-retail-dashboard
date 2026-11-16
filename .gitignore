@@ -16,3 +16,10 @@ __pycache__/
 # OS
 Thumbs.db
 .DS_Store
+
+# Raw/working data used to build database/fmcg.db -- kept locally, not in
+# the repo (the SQLite file is the artifact that actually matters here).
+*.csv
+*.xlsx
+clean_dataset.pdf
+FMCG retail-KUHU-ASUS.pdf
